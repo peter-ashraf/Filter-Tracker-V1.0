@@ -3,17 +3,22 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Water Filter Tracker</title>
+    <title>AquaTracker - Water Filter Manager</title>
     
     <!-- PWA Meta Tags -->
-    <meta name="description" content="Track your water filter replacements and never miss a change">
+    <meta name="description" content="Track your water filter replacements with smart notifications">
     <meta name="theme-color" content="#218085">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Filter Tracker">
+    <meta name="apple-mobile-web-app-title" content="AquaTracker">
     
-    <!-- Styles -->
-    <link rel="stylesheet" href="style.css">
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="./manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNCIgZmlsbD0iIzIxODA4NSIvPgo8dGV4dCB4PSIxNiIgeT0iMjAiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+💧</dGV4dD4KPC9zdmc+">
+    
+    <link rel="stylesheet" href="./style.css">
 </head>
 <body>
     <!-- Header -->
@@ -21,206 +26,502 @@
         <div class="header-content">
             <div class="logo-section">
                 <div class="logo">💧</div>
-                <h1 class="app-title">Filter Tracker</h1>
+                <h1 class="app-title">AquaTracker</h1>
             </div>
             <div class="header-controls">
-                <button id="notification-toggle" class="icon-btn" title="Toggle Notifications" aria-label="Toggle Notifications">
+                <button id="notification-toggle" class="icon-btn" title="Toggle Notifications">
                     <span class="notification-icon">🔕</span>
                 </button>
-                <button id="theme-toggle" class="icon-btn theme-toggle" title="Toggle Theme" aria-label="Toggle Dark/Light Theme">
+                <button id="theme-toggle" class="icon-btn" title="Toggle Theme">
                     <span class="theme-icon">🌙</span>
                 </button>
             </div>
         </div>
     </header>
 
+    <!-- Navigation Tabs -->
+    <nav class="tab-navigation">
+        <div class="container">
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="dashboard">
+                    <span class="tab-icon">🏠</span>
+                    <span class="tab-label">Dashboard</span>
+                </button>
+                <button class="tab-btn" data-tab="history">
+                    <span class="tab-icon">📋</span>
+                    <span class="tab-label">History</span>
+                </button>
+                <button class="tab-btn" data-tab="statistics">
+                    <span class="tab-icon">📊</span>
+                    <span class="tab-label">Statistics</span>
+                </button>
+                <button class="tab-btn" data-tab="settings">
+                    <span class="tab-icon">⚙️</span>
+                    <span class="tab-label">Settings</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
     <!-- Main Content -->
     <main class="main-content">
         <div class="container">
-            <!-- Filter Stats -->
-            <div class="stats-grid">
-                <div class="stat-card">
-                    <div class="stat-number" id="total-filters">7</div>
-                    <div class="stat-label">Total Filters</div>
+            
+            <!-- Dashboard Tab -->
+            <div id="dashboard-tab" class="tab-content active">
+                <!-- Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-filters">7</div>
+                        <div class="stat-label">Total Filters</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number overdue" id="overdue-filters">3</div>
+                        <div class="stat-label">Overdue</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number due-soon" id="due-soon-filters">1</div>
+                        <div class="stat-label">Due Soon</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number good" id="good-filters">3</div>
+                        <div class="stat-label">Good</div>
+                    </div>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number overdue" id="overdue-filters">3</div>
-                    <div class="stat-label">Overdue</div>
+
+                <!-- Action Bar -->
+                <div class="action-bar">
+                    <input type="text" id="search-input" placeholder="Search filters..." class="search-input">
+                    <button id="add-filter-btn" class="btn btn-primary">
+                        <span>➕</span> Add Filter
+                    </button>
                 </div>
-                <div class="stat-card">
-                    <div class="stat-number due-soon" id="due-soon-filters">1</div>
-                    <div class="stat-label">Due Soon</div>
+
+                <!-- Filters Grid -->
+                <div id="filters-grid" class="filters-grid">
+                    <!-- Filters will be rendered here -->
                 </div>
             </div>
 
-            <!-- Actions -->
-            <div class="actions-section">
-                <button id="add-filter-btn" class="btn btn--primary">
-                    ➕ Add New Filter
-                </button>
-                <div class="filter-controls">
-                    <select id="sort-filters" class="form-control">
-                        <option value="dueDate">Sort by Due Date</option>
-                        <option value="name">Sort by Name</option>
-                        <option value="location">Sort by Location</option>
-                        <option value="stage">Sort by Stage</option>
-                    </select>
-                </div>
-            </div>
-
-            <!-- Filters List -->
-            <div id="filters-container" class="filters-grid">
-                <!-- Filters will be dynamically loaded here -->
-            </div>
-
-            <!-- Empty State -->
-            <div id="empty-state" class="empty-state hidden">
-                <div class="empty-icon">💧</div>
-                <h3>No Filters Yet</h3>
-                <p>Add your first water filter to start tracking replacements.</p>
-                <button class="btn btn--primary" id="empty-add-btn">Add Your First Filter</button>
-            </div>
-        </div>
-    </main>
-
-    <!-- Add/Edit Filter Modal -->
-    <div id="filter-modal" class="modal hidden">
-        <div class="modal-backdrop"></div>
-        <div class="modal-content">
-            <div class="modal-header">
-                <h2 id="modal-title">Add New Filter</h2>
-                <button id="close-modal" class="close-btn" aria-label="Close Modal">&times;</button>
-            </div>
-            <form id="filter-form" class="modal-body">
-                <div class="form-group">
-                    <label for="filter-name" class="form-label">Filter Name *</label>
-                    <input type="text" id="filter-name" class="form-control" required>
+            <!-- History Tab -->
+            <div id="history-tab" class="tab-content">
+                <div class="section-header">
+                    <h2>Replacement History</h2>
+                    <div class="header-actions">
+                        <button id="export-history" class="btn btn-secondary btn-sm">
+                            <span>📥</span> Export
+                        </button>
+                        <button id="clear-history" class="btn btn-outline btn-sm">
+                            <span>🗑️</span> Clear
+                        </button>
+                    </div>
                 </div>
                 
-                <div class="form-group">
-                    <label for="filter-location" class="form-label">Location *</label>
-                    <input type="text" id="filter-location" class="form-control" placeholder="e.g., Kitchen Sink, RO System" required>
+                <div class="history-filters">
+                    <select id="history-filter" class="form-control">
+                        <option value="all">All Filters</option>
+                        <option value="30">Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                        <option value="365">Last Year</option>
+                    </select>
                 </div>
 
-                <div class="form-row">
-                    <div class="form-group">
-                        <label for="filter-stage" class="form-label">Stage</label>
-                        <input type="text" id="filter-stage" class="form-control" placeholder="e.g., Stage 1">
+                <div id="history-list" class="history-list">
+                    <!-- History items will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Statistics Tab -->
+            <div id="statistics-tab" class="tab-content">
+                <div class="section-header">
+                    <h2>Statistics & Insights</h2>
+                </div>
+
+                <!-- Cost Statistics -->
+                <div class="stats-section">
+                    <h3>💰 Cost Analysis</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="total-cost">$0</div>
+                            <div class="stat-label">Total Spent</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="avg-cost">$0</div>
+                            <div class="stat-label">Average Cost</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="monthly-cost">$0</div>
+                            <div class="stat-label">Monthly Average</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="yearly-projection">$0</div>
+                            <div class="stat-label">Yearly Projection</div>
+                        </div>
                     </div>
-                    
+                </div>
+
+                <!-- Environmental Impact -->
+                <div class="stats-section">
+                    <h3>🌱 Environmental Impact</h3>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <div class="impact-icon">💧</div>
+                            <div class="impact-content">
+                                <div class="impact-number" id="bottles-saved">0</div>
+                                <div class="impact-label">Plastic Bottles Saved</div>
+                            </div>
+                        </div>
+                        <div class="impact-card">
+                            <div class="impact-icon">🌍</div>
+                            <div class="impact-content">
+                                <div class="impact-number" id="co2-saved">0 lbs</div>
+                                <div class="impact-label">CO₂ Reduced</div>
+                            </div>
+                        </div>
+                        <div class="impact-card">
+                            <div class="impact-icon">♻️</div>
+                            <div class="impact-content">
+                                <div class="impact-number" id="waste-reduced">0 lbs</div>
+                                <div class="impact-label">Plastic Waste Reduced</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Performance -->
+                <div class="stats-section">
+                    <h3>📈 Filter Performance</h3>
+                    <div class="performance-list" id="performance-list">
+                        <!-- Performance items will be rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings-tab" class="tab-content">
+                <div class="section-header">
+                    <h2>Settings</h2>
+                </div>
+
+                <div class="settings-section">
+                    <h3>🔔 Notification Defaults</h3>
                     <div class="form-group">
-                        <label for="filter-type" class="form-label">Filter Type *</label>
-                        <select id="filter-type" class="form-control" required>
-                            <option value="">Select Type</option>
-                            <option value="sediment">Sediment Filter</option>
-                            <option value="carbon">Carbon Filter</option>
-                            <option value="ro-membrane">RO Membrane</option>
-                            <option value="mineral">Mineral Filter</option>
-                            <option value="uv-lamp">UV Lamp</option>
-                            <option value="whole-house">Whole House Filter</option>
-                            <option value="pitcher">Pitcher Filter</option>
-                            <option value="faucet-mount">Faucet Mount Filter</option>
-                            <option value="shower">Shower Filter</option>
-                            <option value="refrigerator">Refrigerator Filter</option>
+                        <label for="default-buy-reminder">Default Buy Reminder</label>
+                        <select id="default-buy-reminder" class="form-control">
+                            <option value="7">1 week before</option>
+                            <option value="14" selected>2 weeks before</option>
+                            <option value="21">3 weeks before</option>
+                            <option value="30">1 month before</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="default-replace-reminder">Default Replace Reminder</label>
+                        <select id="default-replace-reminder" class="form-control">
+                            <option value="1">1 day before</option>
+                            <option value="3">3 days before</option>
+                            <option value="7" selected>1 week before</option>
+                            <option value="14">2 weeks before</option>
                         </select>
                     </div>
                 </div>
 
-                <div class="form-row">
+                <div class="settings-section">
+                    <h3>🎨 Appearance</h3>
                     <div class="form-group">
-                        <label for="filter-brand" class="form-label">Brand</label>
-                        <input type="text" id="filter-brand" class="form-control" placeholder="e.g., APEC, Aquasana">
-                    </div>
-                    
-                    <div class="form-group">
-                        <label for="filter-model" class="form-label">Model</label>
-                        <input type="text" id="filter-model" class="form-control" placeholder="Model number">
+                        <label for="currency-select">Currency</label>
+                        <select id="currency-select" class="form-control">
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                            <option value="CAD">CAD ($)</option>
+                        </select>
                     </div>
                 </div>
 
+                <div class="settings-section">
+                    <h3>📱 Data Management</h3>
+                    <div class="settings-actions">
+                        <button id="export-data" class="btn btn-primary">
+                            <span>📤</span> Export All Data
+                        </button>
+                        <button id="import-data" class="btn btn-secondary">
+                            <span>📥</span> Import Data
+                        </button>
+                        <input type="file" id="import-file" accept=".json" style="display: none;">
+                        <button id="reset-data" class="btn btn-danger">
+                            <span>🗑️</span> Reset All Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </main>
+
+    <!-- Filter Modal -->
+    <div id="filter-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Add Filter</h2>
+                <button class="modal-close">&times;</button>
+            </div>
+            <form id="filter-form" class="modal-body">
+                <div class="form-group">
+                    <label for="filter-name">Filter Name</label>
+                    <input type="text" id="filter-name" required>
+                </div>
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="install-date" class="form-label">Install Date *</label>
-                        <input type="date" id="install-date" class="form-control" required>
+                        <label for="filter-location">Location</label>
+                        <input type="text" id="filter-location" required>
                     </div>
+                    <div class="form-group">
+                        <label for="filter-stage">Stage</label>
+                        <input type="text" id="filter-stage" placeholder="e.g., Stage 1">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="filter-type">Type</label>
+                        <select id="filter-type" required>
+                            <option value="">Select Type</option>
+                            <option value="Sediment">Sediment</option>
+                            <option value="Carbon">Carbon</option>
+                            <option value="Carbon Block">Carbon Block</option>
+                            <option value="RO Membrane">RO Membrane</option>
+                            <option value="Post Carbon">Post Carbon</option>
+                            <option value="Mineral">Mineral</option>
+                            <option value="UV Lamp">UV Lamp</option>
+                            <option value="Whole House">Whole House</option>
+                            <option value="Pitcher">Pitcher</option>
+                            <option value="Faucet Mount">Faucet Mount</option>
+                            <option value="Shower">Shower</option>
+                            <option value="Refrigerator">Refrigerator</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-interval">Replace Every (months)</label>
+                        <select id="filter-interval" required>
+                            <option value="3">3 months</option>
+                            <option value="6">6 months</option>
+                            <option value="9">9 months</option>
+                            <option value="12">12 months</option>
+                            <option value="18">18 months</option>
+                            <option value="24">24 months</option>
+                            <option value="36">36 months</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="filter-brand">Brand</label>
+                        <input type="text" id="filter-brand">
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-model">Model</label>
+                        <input type="text" id="filter-model">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="filter-install-date">Install Date</label>
+                        <input type="date" id="filter-install-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-cost">Cost ($)</label>
+                        <input type="number" id="filter-cost" min="0" step="0.01">
+                    </div>
+                </div>
+
+                <!-- Advanced Notification Settings -->
+                <div class="notification-settings">
+                    <h4>🔔 Notification Settings</h4>
                     
                     <div class="form-group">
-                        <label for="replacement-interval" class="form-label">Replace Every (months) *</label>
-                        <input type="number" id="replacement-interval" class="form-control" min="1" max="60" required>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="buy-reminder-enabled" checked>
+                            <span>Enable Buy Reminders</span>
+                        </label>
+                    </div>
+                    
+                    <div class="buy-reminder-settings" id="buy-reminder-settings">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="buy-reminder-timing">When to remind</label>
+                                <select id="buy-reminder-timing">
+                                    <option value="1">1 day before</option>
+                                    <option value="3">3 days before</option>
+                                    <option value="7">1 week before</option>
+                                    <option value="14" selected>2 weeks before</option>
+                                    <option value="21">3 weeks before</option>
+                                    <option value="30">1 month before</option>
+                                    <option value="60">2 months before</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="buy-reminder-frequency">Repeat</label>
+                                <select id="buy-reminder-frequency">
+                                    <option value="once">Once only</option>
+                                    <option value="daily">Daily</option>
+                                    <option value="every-3-days">Every 3 days</option>
+                                    <option value="weekly" selected>Weekly</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="buy-reminder-time">Time of day</label>
+                                <input type="time" id="buy-reminder-time" value="09:00">
+                            </div>
+                            <div class="form-group">
+                                <label for="buy-stop-days">Stop reminding after</label>
+                                <select id="buy-stop-days">
+                                    <option value="0">Never stop</option>
+                                    <option value="3">3 days</option>
+                                    <option value="7">1 week</option>
+                                    <option value="14">2 weeks</option>
+                                    <option value="30">1 month</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="replace-reminder-enabled" checked>
+                            <span>Enable Replace Reminders</span>
+                        </label>
+                    </div>
+                    
+                    <div class="replace-reminder-settings" id="replace-reminder-settings">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="replace-reminder-timing">When to remind</label>
+                                <select id="replace-reminder-timing">
+                                    <option value="0">On due date</option>
+                                    <option value="1" selected>1 day before</option>
+                                    <option value="3">3 days before</option>
+                                    <option value="7">1 week before</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="replace-reminder-frequency">Repeat</label>
+                                <select id="replace-reminder-frequency">
+                                    <option value="once">Once only</option>
+                                    <option value="daily" selected>Daily</option>
+                                    <option value="twice-daily">Twice daily</option>
+                                    <option value="every-hour">Every hour</option>
+                                    <option value="every-2-hours">Every 2 hours</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="replace-reminder-time">Time of day</label>
+                                <input type="time" id="replace-reminder-time" value="10:00">
+                            </div>
+                            <div class="form-group">
+                                <label for="overdue-escalation">When overdue</label>
+                                <select id="overdue-escalation">
+                                    <option value="none">No change</option>
+                                    <option value="hourly">Every hour</option>
+                                    <option value="every-2-hours" selected>Every 2 hours</option>
+                                    <option value="every-6-hours">Every 6 hours</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="critical-reminder-enabled">
+                            <span>Enable Critical Overdue Alerts</span>
+                        </label>
+                    </div>
+                    
+                    <div class="critical-reminder-settings" id="critical-reminder-settings" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="critical-threshold">Consider critical after</label>
+                                <select id="critical-threshold">
+                                    <option value="7">1 week overdue</option>
+                                    <option value="14" selected>2 weeks overdue</option>
+                                    <option value="30">1 month overdue</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="critical-frequency">Alert frequency</label>
+                                <select id="critical-frequency">
+                                    <option value="every-15-min">Every 15 minutes</option>
+                                    <option value="every-30-min">Every 30 minutes</option>
+                                    <option value="hourly" selected>Every hour</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="form-group">
-                    <label for="filter-notes" class="form-label">Notes</label>
-                    <textarea id="filter-notes" class="form-control" rows="3" placeholder="Additional notes about this filter"></textarea>
+                    <label for="filter-notes">Notes</label>
+                    <textarea id="filter-notes" rows="3"></textarea>
                 </div>
-
-                <div class="modal-footer">
-                    <button type="button" id="cancel-btn" class="btn btn--secondary">Cancel</button>
-                    <button type="submit" id="save-btn" class="btn btn--primary">Save Filter</button>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Filter</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- Confirmation Modal -->
-    <div id="confirm-modal" class="modal hidden">
-        <div class="modal-backdrop"></div>
-        <div class="modal-content modal-content--small">
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="modal" style="display: none;">
+        <div class="modal-content">
             <div class="modal-header">
-                <h2 id="confirm-title">Confirm Action</h2>
+                <h2>Confirm Action</h2>
             </div>
             <div class="modal-body">
-                <p id="confirm-message">Are you sure you want to proceed?</p>
-            </div>
-            <div class="modal-footer">
-                <button id="confirm-cancel" class="btn btn--secondary">Cancel</button>
-                <button id="confirm-ok" class="btn btn--primary">Confirm</button>
+                <p id="confirm-message">Are you sure?</p>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="confirm-cancel">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirm-ok">Delete</button>
+                </div>
             </div>
         </div>
     </div>
 
     <!-- Notification Permission Modal -->
-    <div id="notification-modal" class="modal hidden">
-        <div class="modal-backdrop"></div>
-        <div class="modal-content modal-content--small">
+    <div id="notification-modal" class="modal" style="display: none;">
+        <div class="modal-content">
             <div class="modal-header">
-                <h2>Enable Notifications</h2>
+                <h2>🔔 Enable Notifications</h2>
             </div>
             <div class="modal-body">
-                <p>Get notified when your filters need to be replaced or when it's time to buy new ones.</p>
-                <p><strong>We'll send you:</strong></p>
+                <p>Get reminded when your water filters need replacement!</p>
                 <ul>
-                    <li>Reminders to buy replacement filters</li>
-                    <li>Alerts when filters are due for replacement</li>
-                    <li>Overdue filter notifications</li>
+                    <li>• Buy reminders before filters expire</li>
+                    <li>• Replace reminders when due</li>
+                    <li>• Overdue alerts for immediate action</li>
+                    <li>• Custom timing and frequency for each filter</li>
                 </ul>
-            </div>
-            <div class="modal-footer">
-                <button id="notification-deny" class="btn btn--secondary">Not Now</button>
-                <button id="notification-allow" class="btn btn--primary">Enable Notifications</button>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="notification-cancel">Not Now</button>
+                    <button type="button" class="btn btn-primary" id="notification-enable">Enable Notifications</button>
+                </div>
             </div>
         </div>
-    </div>
-
-    <!-- Toast Notifications -->
-    <div id="toast-container" class="toast-container">
-        <!-- Toast messages will appear here -->
     </div>
 
     <!-- Install Prompt -->
-    <div id="install-prompt" class="install-prompt hidden">
+    <div id="install-prompt" class="install-banner" style="display: none;">
         <div class="install-content">
-            <div class="install-icon">📱</div>
-            <div class="install-text">
-                <h3>Install Water Filter Tracker</h3>
-                <p>Get quick access and offline functionality</p>
+            <span>📱 Install AquaTracker for offline access and notifications</span>
+            <div class="install-actions">
+                <button id="install-btn" class="btn btn-primary btn-sm">Install</button>
+                <button id="install-dismiss" class="btn btn-secondary btn-sm">Later</button>
             </div>
-            <button id="install-btn" class="btn btn--primary">Install</button>
-            <button id="dismiss-install" class="close-btn">&times;</button>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <script src="./app.js"></script>
 </body>
 </html>
