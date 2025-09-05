@@ -150,19 +150,19 @@
                     <h3>💰 Cost Analysis</h3>
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <div class="stat-number" id="total-cost">$245</div>
+                            <div class="stat-number" id="total-cost">EGP 3,920</div>
                             <div class="stat-label">Total Spent</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-number" id="avg-cost">$35</div>
+                            <div class="stat-number" id="avg-cost">EGP 560</div>
                             <div class="stat-label">Average Cost</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-number" id="monthly-cost">$42</div>
+                            <div class="stat-number" id="monthly-cost">EGP 672</div>
                             <div class="stat-label">Monthly Average</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-number" id="yearly-projection">$504</div>
+                            <div class="stat-number" id="yearly-projection">EGP 8,064</div>
                             <div class="stat-label">Yearly Projection</div>
                         </div>
                     </div>
@@ -242,7 +242,7 @@
                             <option value="EUR">EUR (€)</option>
                             <option value="GBP">GBP (£)</option>
                             <option value="CAD">CAD ($)</option>
-                            <option value="EGP">EGP (L.E.)</option>
+                            <option value="EGP" selected>EGP (ج.م)</option>
                         </select>
                     </div>
                 </div>
@@ -267,7 +267,7 @@
         </div>
     </main>
 
-    <!-- Filter Modal -->
+    <!-- Filter Modal with Advanced Notifications -->
     <div id="filter-modal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
@@ -337,14 +337,148 @@
                         <input type="date" id="filter-install-date" required>
                     </div>
                     <div class="form-group">
-                        <label for="filter-cost">Cost ($)</label>
+                        <label for="filter-cost">Cost (EGP)</label>
                         <input type="number" id="filter-cost" min="0" step="0.01">
+                    </div>
+                </div>
+
+                <!-- Advanced Notification Settings -->
+                <div class="notification-settings">
+                    <h4>🔔 Advanced Notification Settings</h4>
+                    
+                    <!-- Buy Reminders -->
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="buy-reminder-enabled" checked>
+                            <span>Enable Buy Reminders</span>
+                        </label>
+                    </div>
+                    
+                    <div class="buy-reminder-settings" id="buy-reminder-settings">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="buy-reminder-timing">When to remind</label>
+                                <select id="buy-reminder-timing">
+                                    <option value="1">1 day before</option>
+                                    <option value="3">3 days before</option>
+                                    <option value="7">1 week before</option>
+                                    <option value="14" selected>2 weeks before</option>
+                                    <option value="21">3 weeks before</option>
+                                    <option value="30">1 month before</option>
+                                    <option value="60">2 months before</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="buy-reminder-frequency">Repeat frequency</label>
+                                <select id="buy-reminder-frequency">
+                                    <option value="once">Once only</option>
+                                    <option value="daily">Daily</option>
+                                    <option value="every-3-days">Every 3 days</option>
+                                    <option value="weekly" selected>Weekly</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="buy-reminder-time">Time of day</label>
+                                <input type="time" id="buy-reminder-time" value="09:00">
+                            </div>
+                            <div class="form-group">
+                                <label for="buy-stop-days">Stop reminding after</label>
+                                <select id="buy-stop-days">
+                                    <option value="0">Never stop</option>
+                                    <option value="3">3 days</option>
+                                    <option value="7" selected>1 week</option>
+                                    <option value="14">2 weeks</option>
+                                    <option value="30">1 month</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Replace Reminders -->
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="replace-reminder-enabled" checked>
+                            <span>Enable Replace Reminders</span>
+                        </label>
+                    </div>
+                    
+                    <div class="replace-reminder-settings" id="replace-reminder-settings">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="replace-reminder-timing">When to remind</label>
+                                <select id="replace-reminder-timing">
+                                    <option value="0">On due date</option>
+                                    <option value="1" selected>1 day before</option>
+                                    <option value="3">3 days before</option>
+                                    <option value="7">1 week before</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="replace-reminder-frequency">Repeat frequency</label>
+                                <select id="replace-reminder-frequency">
+                                    <option value="once">Once only</option>
+                                    <option value="daily" selected>Daily</option>
+                                    <option value="twice-daily">Twice daily</option>
+                                    <option value="every-2-hours">Every 2 hours</option>
+                                    <option value="every-hour">Every hour</option>
+                                    <option value="every-30-min">Every 30 minutes</option>
+                                    <option value="every-15-min">Every 15 minutes</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="replace-reminder-time">Time of day</label>
+                                <input type="time" id="replace-reminder-time" value="10:00">
+                            </div>
+                            <div class="form-group">
+                                <label for="overdue-escalation">When overdue</label>
+                                <select id="overdue-escalation">
+                                    <option value="none">No change</option>
+                                    <option value="every-hour">Every hour</option>
+                                    <option value="every-2-hours" selected>Every 2 hours</option>
+                                    <option value="every-6-hours">Every 6 hours</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Critical Overdue Alerts -->
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="critical-reminder-enabled">
+                            <span>Enable Critical Overdue Alerts</span>
+                        </label>
+                    </div>
+                    
+                    <div class="critical-reminder-settings" id="critical-reminder-settings" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="critical-threshold">Consider critical after</label>
+                                <select id="critical-threshold">
+                                    <option value="7">1 week overdue</option>
+                                    <option value="14" selected>2 weeks overdue</option>
+                                    <option value="21">3 weeks overdue</option>
+                                    <option value="30">1 month overdue</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="critical-frequency">Alert frequency</label>
+                                <select id="critical-frequency">
+                                    <option value="every-15-min">Every 15 minutes</option>
+                                    <option value="every-30-min">Every 30 minutes</option>
+                                    <option value="hourly" selected>Every hour</option>
+                                </select>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
                 <div class="form-group">
                     <label for="filter-notes">Notes</label>
-                    <textarea id="filter-notes" rows="3"></textarea>
+                    <textarea id="filter-notes" rows="3" placeholder="Additional notes about this filter..."></textarea>
                 </div>
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
@@ -365,6 +499,28 @@
                 <div class="form-actions">
                     <button type="button" class="btn btn-secondary" id="confirm-cancel">Cancel</button>
                     <button type="button" class="btn btn-danger" id="confirm-ok">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Permission Modal -->
+    <div id="notification-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔔 Enable Notifications</h2>
+            </div>
+            <div class="modal-body">
+                <p>Get reminded when your water filters need replacement!</p>
+                <ul>
+                    <li>• Buy reminders before filters expire</li>
+                    <li>• Replace reminders when due</li>
+                    <li>• Overdue alerts for immediate action</li>
+                    <li>• Custom timing and frequency for each filter</li>
+                </ul>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="notification-cancel">Not Now</button>
+                    <button type="button" class="btn btn-primary" id="notification-enable">Enable Notifications</button>
                 </div>
             </div>
         </div>
