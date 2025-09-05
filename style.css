@@ -738,13 +738,15 @@ select.form-control {
 }
 
 /* END PERPLEXITY DESIGN SYSTEM */
+/* AquaTracker - Bulletproof Theme System */
+
+/* Base Light Theme (Default) */
 :root {
-  /* Use design system variables instead of custom ones */
   --primary-color: var(--color-primary);
   --primary-dark: var(--color-primary-hover);
   --primary-light: var(--color-primary-active);
   --secondary-color: var(--color-secondary);
-  --accent-color: var(--color-teal-400);
+  --accent-color: var(--color-primary);
   
   --text-primary: var(--color-text);
   --text-secondary: var(--color-text-secondary);
@@ -766,24 +768,25 @@ select.form-control {
   --shadow-lg: var(--shadow-lg);
 }
 
-/* Dark Theme Variables - Updated to work with design system */
-[data-theme="dark"] {
-  --text-primary: var(--color-text) !important;
-  --text-secondary: var(--color-text-secondary) !important;
-  --text-muted: var(--color-text-secondary) !important;
+/* Dark Theme Override */
+html[data-theme="dark"] {
+  --text-primary: var(--color-text);
+  --text-secondary: var(--color-text-secondary);
+  --text-muted: var(--color-text-secondary);
   
-  --bg-primary: var(--color-surface) !important;
-  --bg-secondary: var(--color-background) !important;
-  --bg-tertiary: var(--color-secondary) !important;
+  --bg-primary: var(--color-surface);
+  --bg-secondary: var(--color-background);
+  --bg-tertiary: var(--color-secondary);
   
-  --border-color: var(--color-border) !important;
-  --border-light: var(--color-card-border) !important;
+  --border-color: var(--color-border);
+  --border-light: var(--color-card-border);
   
-  --shadow: var(--shadow-sm) !important;
-  --shadow-md: var(--shadow-md) !important;
-  --shadow-lg: var(--shadow-lg) !important;
+  --shadow: var(--shadow-sm);
+  --shadow-md: var(--shadow-md);
+  --shadow-lg: var(--shadow-lg);
 }
 
+/* Reset and Base Styles */
 * {
   margin: 0;
   padding: 0;
@@ -814,7 +817,7 @@ body {
   top: 0;
   z-index: 100;
   box-shadow: var(--shadow);
-  transition: background-color var(--duration-normal) var(--ease-standard), border-color var(--duration-normal) var(--ease-standard);
+  transition: all var(--duration-normal) var(--ease-standard);
 }
 
 .header-content {
@@ -834,7 +837,7 @@ body {
 
 .logo {
   font-size: var(--font-size-4xl);
-  filter: drop-shadow(0 2px 4px rgba(var(--color-teal-500-rgb), 0.3));
+  filter: drop-shadow(0 var(--space-2) var(--space-4) rgba(var(--color-teal-500-rgb), 0.3));
 }
 
 .app-title {
@@ -877,7 +880,7 @@ body {
   position: sticky;
   top: 80px;
   z-index: 99;
-  transition: background-color var(--duration-normal) var(--ease-standard), border-color var(--duration-normal) var(--ease-standard);
+  transition: all var(--duration-normal) var(--ease-standard);
 }
 
 .tab-buttons {
@@ -980,11 +983,11 @@ body {
   text-align: center;
   box-shadow: var(--shadow);
   border: 1px solid var(--border-light);
-  transition: background-color var(--duration-normal) var(--ease-standard), border-color var(--duration-normal) var(--ease-standard), box-shadow var(--duration-normal) var(--ease-standard);
+  transition: all var(--duration-normal) var(--ease-standard);
 }
 
 .stat-number {
-  font-size: var(--font-size-4xl);
+  font-size: 2.5rem;
   font-weight: var(--font-weight-bold);
   color: var(--primary-color);
   margin-bottom: var(--space-8);
@@ -1071,11 +1074,6 @@ body {
   font-family: var(--font-family-base);
 }
 
-.btn:focus-visible {
-  outline: none;
-  box-shadow: var(--focus-ring);
-}
-
 .btn-primary {
   background: var(--primary-color);
   color: var(--color-btn-primary-text);
@@ -1113,7 +1111,7 @@ body {
 }
 
 .btn-danger:hover {
-  background: var(--color-red-500);
+  background: var(--color-error);
 }
 
 .btn-sm {
@@ -1145,15 +1143,15 @@ body {
 }
 
 .filter-card.overdue {
-  border-left: 4px solid var(--danger-color);
+  border-left: var(--space-4) solid var(--danger-color);
 }
 
 .filter-card.due-soon {
-  border-left: 4px solid var(--warning-color);
+  border-left: var(--space-4) solid var(--warning-color);
 }
 
 .filter-card.good {
-  border-left: 4px solid var(--success-color);
+  border-left: var(--space-4) solid var(--success-color);
 }
 
 .filter-header {
@@ -1343,7 +1341,7 @@ body {
 }
 
 .impact-icon {
-  font-size: var(--font-size-4xl);
+  font-size: 2.5rem;
 }
 
 .impact-content {
@@ -1478,7 +1476,7 @@ body {
   }
   
   .app-title {
-    font-size: var(--font-size-xl);
+    font-size: var(--font-size-lg);
   }
   
   .stats-grid {
@@ -1538,66 +1536,12 @@ body {
     padding: 0 var(--space-12);
   }
   
-  .header-content {
-    padding: 0 var(--space-12);
-  }
-  
-  .app-header {
-    padding: var(--space-12) 0;
-  }
-  
-  .app-title {
-    font-size: var(--font-size-lg);
-  }
-  
-  .logo {
-    font-size: var(--font-size-3xl);
-  }
-  
-  .tab-content {
-    padding: var(--space-24) 0;
-  }
-  
-  .section-header {
-    margin-bottom: var(--space-20);
-    gap: var(--space-12);
-  }
-  
-  .section-header h2 {
-    font-size: var(--font-size-xl);
-  }
-  
   .stats-grid {
     grid-template-columns: 1fr;
-    gap: var(--space-12);
-    margin-bottom: var(--space-24);
-  }
-  
-  .stat-card {
-    padding: var(--space-20);
-  }
-  
-  .stat-number {
-    font-size: var(--font-size-3xl);
-    margin-bottom: var(--space-6);
-  }
-  
-  .action-bar {
-    gap: var(--space-12);
-    margin-bottom: var(--space-24);
-  }
-  
-  .filters-grid {
-    gap: var(--space-16);
-  }
-  
-  .filter-card {
-    padding: var(--space-20);
   }
   
   .filter-details {
     grid-template-columns: 1fr;
-    gap: var(--space-6);
   }
   
   .header-controls {
@@ -1605,24 +1549,16 @@ body {
   }
   
   .icon-btn {
-    min-width: 2rem;
-    min-height: 2rem;
+    min-width: var(--space-32);
+    min-height: var(--space-32);
     font-size: var(--font-size-base);
     padding: var(--space-6);
-  }
-  
-  .history-item {
-    padding: var(--space-20);
   }
   
   .history-header {
     flex-direction: column;
     align-items: flex-start;
     gap: var(--space-4);
-  }
-  
-  .history-header h4 {
-    font-size: var(--font-size-base);
   }
   
   .history-details {
@@ -1634,15 +1570,6 @@ body {
   .impact-card {
     flex-direction: column;
     text-align: center;
-    padding: var(--space-20);
-  }
-  
-  .impact-number {
-    font-size: var(--font-size-xl);
-  }
-  
-  .performance-item {
-    padding: var(--space-16);
   }
   
   .performance-header {
@@ -1651,80 +1578,56 @@ body {
     gap: var(--space-4);
   }
   
-  .performance-header h4 {
-    font-size: var(--font-size-sm);
-  }
-  
-  .performance-details {
-    gap: var(--space-6);
-  }
-  
   .tab-navigation {
     top: 70px;
   }
   
   .tab-btn {
-    padding: var(--space-10) var(--space-12);
-    gap: var(--space-6);
+    padding: var(--space-8) var(--space-12);
   }
   
   .tab-label {
-    font-size: var(--font-size-xs);
+    display: none;
   }
   
-  .btn {
-    padding: var(--space-10) var(--space-16);
-    font-size: var(--font-size-xs);
+  .action-bar {
+    gap: var(--space-8);
   }
   
-  .btn-sm {
-    padding: var(--space-6) var(--space-12);
+  .header-content {
+    padding: 0 var(--space-12);
+  }
+  
+  .stat-card {
+    padding: var(--space-16);
+  }
+  
+  .filter-card {
+    padding: var(--space-16);
+  }
+  
+  .history-item {
+    padding: var(--space-16);
+  }
+  
+  .performance-item {
+    padding: var(--space-12);
+  }
+  
+  .impact-card {
+    padding: var(--space-16);
+    gap: var(--space-12);
   }
   
   .empty-state {
     padding: var(--space-24) var(--space-12);
   }
   
-  .empty-icon {
-    font-size: 3rem;
-    margin-bottom: var(--space-12);
-  }
-  
-  .empty-state h3 {
-    font-size: var(--font-size-lg);
-  }
-  
   .install-banner {
-    bottom: var(--space-12);
     left: var(--space-12);
     right: var(--space-12);
+    bottom: var(--space-12);
     padding: var(--space-12);
-  }
-  
-  .install-content {
-    gap: var(--space-12);
-  }
-  
-  .stats-section {
-    margin-bottom: var(--space-24);
-  }
-  
-  .stats-section h3 {
-    font-size: var(--font-size-lg);
-    margin-bottom: var(--space-12);
-  }
-  
-  .settings-section {
-    margin-bottom: var(--space-24);
-  }
-  
-  .settings-section h3 {
-    font-size: var(--font-size-lg);
-    margin-bottom: var(--space-12);
-  }
-  
-  .settings-actions {
-    gap: var(--space-12);
   }
 }
 
@@ -1771,28 +1674,41 @@ body {
   outline-offset: 2px;
 }
 
+.tab-btn:focus-visible,
+.btn:focus-visible,
+.icon-btn:focus-visible {
+  box-shadow: var(--focus-ring);
+}
+
 /* Smooth transitions for theme switching */
 * {
-  transition: background-color var(--duration-normal) var(--ease-standard), color var(--duration-normal) var(--ease-standard), border-color var(--duration-normal) var(--ease-standard);
+  transition: background-color var(--duration-normal) var(--ease-standard), 
+             color var(--duration-normal) var(--ease-standard), 
+             border-color var(--duration-normal) var(--ease-standard);
 }
 
-/* Dark theme specific adjustments */
-[data-theme="dark"] .install-banner {
-  background: var(--primary-dark);
+/* Debug Theme Indicator (Remove after testing) */
+body::before {
+  content: "Theme: " attr(data-theme);
+  position: fixed;
+  top: var(--space-10);
+  right: var(--space-10);
+  background: var(--primary-color);
+  color: var(--color-btn-primary-text);
+  padding: var(--space-4) var(--space-8);
+  font-size: var(--font-size-xs);
+  border-radius: var(--radius-sm);
+  z-index: 9999;
+  pointer-events: none;
+  opacity: 0.7;
 }
 
-[data-theme="dark"] .empty-state {
-  opacity: 0.8;
+html[data-theme="light"] body::before {
+  content: "Theme: LIGHT MODE";
+  background: var(--color-success);
 }
 
-/* Scroll behavior for tab navigation */
-@media (max-width: 640px) {
-  .tab-buttons {
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-  }
-  
-  .tab-buttons::-webkit-scrollbar {
-    display: none;
-  }
+html[data-theme="dark"] body::before {
+  content: "Theme: DARK MODE";
+  background: var(--color-error);
 }
