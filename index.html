@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Water Filter Tracker</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Track your water filter replacements and never miss a change">
+    <meta name="theme-color" content="#218085">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Filter Tracker">
+    
+    <!-- Styles -->
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo">💧</div>
+                <h1 class="app-title">Filter Tracker</h1>
+            </div>
+            <div class="header-controls">
+                <button id="notification-toggle" class="icon-btn" title="Toggle Notifications" aria-label="Toggle Notifications">
+                    <span class="notification-icon">🔕</span>
+                </button>
+                <button id="theme-toggle" class="icon-btn theme-toggle" title="Toggle Theme" aria-label="Toggle Dark/Light Theme">
+                    <span class="theme-icon">🌙</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            <!-- Filter Stats -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-number" id="total-filters">7</div>
+                    <div class="stat-label">Total Filters</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number overdue" id="overdue-filters">3</div>
+                    <div class="stat-label">Overdue</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-number due-soon" id="due-soon-filters">1</div>
+                    <div class="stat-label">Due Soon</div>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="actions-section">
+                <button id="add-filter-btn" class="btn btn--primary">
+                    ➕ Add New Filter
+                </button>
+                <div class="filter-controls">
+                    <select id="sort-filters" class="form-control">
+                        <option value="dueDate">Sort by Due Date</option>
+                        <option value="name">Sort by Name</option>
+                        <option value="location">Sort by Location</option>
+                        <option value="stage">Sort by Stage</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Filters List -->
+            <div id="filters-container" class="filters-grid">
+                <!-- Filters will be dynamically loaded here -->
+            </div>
+
+            <!-- Empty State -->
+            <div id="empty-state" class="empty-state hidden">
+                <div class="empty-icon">💧</div>
+                <h3>No Filters Yet</h3>
+                <p>Add your first water filter to start tracking replacements.</p>
+                <button class="btn btn--primary" id="empty-add-btn">Add Your First Filter</button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Add/Edit Filter Modal -->
+    <div id="filter-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Add New Filter</h2>
+                <button id="close-modal" class="close-btn" aria-label="Close Modal">&times;</button>
+            </div>
+            <form id="filter-form" class="modal-body">
+                <div class="form-group">
+                    <label for="filter-name" class="form-label">Filter Name *</label>
+                    <input type="text" id="filter-name" class="form-control" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="filter-location" class="form-label">Location *</label>
+                    <input type="text" id="filter-location" class="form-control" placeholder="e.g., Kitchen Sink, RO System" required>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="filter-stage" class="form-label">Stage</label>
+                        <input type="text" id="filter-stage" class="form-control" placeholder="e.g., Stage 1">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="filter-type" class="form-label">Filter Type *</label>
+                        <select id="filter-type" class="form-control" required>
+                            <option value="">Select Type</option>
+                            <option value="sediment">Sediment Filter</option>
+                            <option value="carbon">Carbon Filter</option>
+                            <option value="ro-membrane">RO Membrane</option>
+                            <option value="mineral">Mineral Filter</option>
+                            <option value="uv-lamp">UV Lamp</option>
+                            <option value="whole-house">Whole House Filter</option>
+                            <option value="pitcher">Pitcher Filter</option>
+                            <option value="faucet-mount">Faucet Mount Filter</option>
+                            <option value="shower">Shower Filter</option>
+                            <option value="refrigerator">Refrigerator Filter</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="filter-brand" class="form-label">Brand</label>
+                        <input type="text" id="filter-brand" class="form-control" placeholder="e.g., APEC, Aquasana">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="filter-model" class="form-label">Model</label>
+                        <input type="text" id="filter-model" class="form-control" placeholder="Model number">
+                    </div>
+                </div>
+
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="install-date" class="form-label">Install Date *</label>
+                        <input type="date" id="install-date" class="form-control" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="replacement-interval" class="form-label">Replace Every (months) *</label>
+                        <input type="number" id="replacement-interval" class="form-control" min="1" max="60" required>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="filter-notes" class="form-label">Notes</label>
+                    <textarea id="filter-notes" class="form-control" rows="3" placeholder="Additional notes about this filter"></textarea>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" id="cancel-btn" class="btn btn--secondary">Cancel</button>
+                    <button type="submit" id="save-btn" class="btn btn--primary">Save Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Confirmation Modal -->
+    <div id="confirm-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-content--small">
+            <div class="modal-header">
+                <h2 id="confirm-title">Confirm Action</h2>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message">Are you sure you want to proceed?</p>
+            </div>
+            <div class="modal-footer">
+                <button id="confirm-cancel" class="btn btn--secondary">Cancel</button>
+                <button id="confirm-ok" class="btn btn--primary">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notification Permission Modal -->
+    <div id="notification-modal" class="modal hidden">
+        <div class="modal-backdrop"></div>
+        <div class="modal-content modal-content--small">
+            <div class="modal-header">
+                <h2>Enable Notifications</h2>
+            </div>
+            <div class="modal-body">
+                <p>Get notified when your filters need to be replaced or when it's time to buy new ones.</p>
+                <p><strong>We'll send you:</strong></p>
+                <ul>
+                    <li>Reminders to buy replacement filters</li>
+                    <li>Alerts when filters are due for replacement</li>
+                    <li>Overdue filter notifications</li>
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button id="notification-deny" class="btn btn--secondary">Not Now</button>
+                <button id="notification-allow" class="btn btn--primary">Enable Notifications</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications -->
+    <div id="toast-container" class="toast-container">
+        <!-- Toast messages will appear here -->
+    </div>
+
+    <!-- Install Prompt -->
+    <div id="install-prompt" class="install-prompt hidden">
+        <div class="install-content">
+            <div class="install-icon">📱</div>
+            <div class="install-text">
+                <h3>Install Water Filter Tracker</h3>
+                <p>Get quick access and offline functionality</p>
+            </div>
+            <button id="install-btn" class="btn btn--primary">Install</button>
+            <button id="dismiss-install" class="close-btn">&times;</button>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
