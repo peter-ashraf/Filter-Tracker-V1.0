@@ -1,4 +1,4 @@
-// AquaTracker - Simplified Working Version
+// AquaTracker - Fixed Theme Toggle Version
 console.log('AquaTracker: Starting...');
 
 class AquaTracker {
@@ -130,11 +130,44 @@ class AquaTracker {
     bindEvents() {
         console.log('Binding events...');
         
-        // Theme toggle
+        // Theme toggle with enhanced debugging
         const themeToggle = document.getElementById('theme-toggle');
+        console.log('Theme toggle element:', themeToggle);
+        
         if (themeToggle) {
-            themeToggle.addEventListener('click', () => this.toggleTheme());
-            console.log('Theme toggle bound');
+            // Remove any existing listeners
+            themeToggle.replaceWith(themeToggle.cloneNode(true));
+            const freshThemeToggle = document.getElementById('theme-toggle');
+            
+            freshThemeToggle.addEventListener('click', (e) => {
+                console.log('Theme toggle clicked!');
+                e.preventDefault();
+                this.toggleTheme();
+            });
+            
+            // Also add a visible test
+            freshThemeToggle.addEventListener('click', () => {
+                freshThemeToggle.style.transform = 'scale(0.95)';
+                setTimeout(() => {
+                    freshThemeToggle.style.transform = 'scale(1)';
+                }, 150);
+            });
+            
+            console.log('Theme toggle bound successfully');
+        } else {
+            console.error('Theme toggle button not found!');
+        }
+
+        // Notification toggle (placeholder)
+        const notificationToggle = document.getElementById('notification-toggle');
+        if (notificationToggle) {
+            notificationToggle.addEventListener('click', () => {
+                console.log('Notification toggle clicked');
+                const icon = notificationToggle.querySelector('.notification-icon');
+                if (icon) {
+                    icon.textContent = icon.textContent === '🔕' ? '🔔' : '🔕';
+                }
+            });
         }
 
         // Tab navigation
@@ -159,6 +192,58 @@ class AquaTracker {
         }
     }
 
+    initializeTheme() {
+        console.log('Initializing theme...');
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        console.log('Saved theme:', savedTheme);
+        this.setTheme(savedTheme);
+    }
+
+    toggleTheme() {
+        console.log('toggleTheme() called');
+        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        console.log('Current theme:', currentTheme);
+        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+        console.log('Switching to theme:', newTheme);
+        this.setTheme(newTheme);
+    }
+
+    setTheme(theme) {
+        console.log('setTheme() called with:', theme);
+        
+        // Set the data attribute
+        document.documentElement.setAttribute('data-theme', theme);
+        console.log('Set data-theme attribute to:', theme);
+        
+        // Save to localStorage
+        localStorage.setItem('theme', theme);
+        console.log('Saved theme to localStorage:', theme);
+        
+        // Update the icon
+        const themeIcon = document.querySelector('.theme-icon');
+        console.log('Theme icon element:', themeIcon);
+        
+        if (themeIcon) {
+            const newIcon = theme === 'light' ? '🌙' : '☀️';
+            themeIcon.textContent = newIcon;
+            console.log('Updated theme icon to:', newIcon);
+        } else {
+            console.error('Theme icon not found!');
+        }
+        
+        // Force a style recalculation
+        document.body.style.display = 'none';
+        document.body.offsetHeight; // Trigger reflow
+        document.body.style.display = '';
+        
+        console.log('Theme successfully set to:', theme);
+        
+        // Test that the theme is actually applied
+        const computedStyle = getComputedStyle(document.body);
+        console.log('Body background color:', computedStyle.backgroundColor);
+        console.log('Body color:', computedStyle.color);
+    }
+
     initializeTabs() {
         this.switchTab('dashboard');
     }
@@ -181,28 +266,6 @@ class AquaTracker {
         if (activeContent) activeContent.classList.add('active');
 
         this.currentTab = tabName;
-    }
-
-    initializeTheme() {
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        this.setTheme(savedTheme);
-    }
-
-    toggleTheme() {
-        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        this.setTheme(newTheme);
-    }
-
-    setTheme(theme) {
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
-        
-        const themeIcon = document.querySelector('.theme-icon');
-        if (themeIcon) {
-            themeIcon.textContent = theme === 'light' ? '🌙' : '☀️';
-        }
-        console.log('Theme set to:', theme);
     }
 
     renderFilters() {
