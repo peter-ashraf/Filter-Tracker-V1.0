@@ -1,0 +1,108 @@
+{
+  "name": "AquaTracker - Water Filter Manager",
+  "short_name": "AquaTracker",
+  "description": "Track and manage your water filter cartridge replacements with smart notifications and offline support",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#218085",
+  "theme_color": "#218085",
+  "orientation": "portrait-primary",
+  "categories": ["utilities", "productivity", "health"],
+  "lang": "en",
+  "dir": "ltr",
+  "scope": "./",
+  "icons": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNzIiIGhlaWdodD0iNzIiIHZpZXdCb3g9IjAgMCA3MiA3MiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjcyIiBoZWlnaHQ9IjcyIiByeD0iMTIiIGZpbGw9IiMyMTgwODUiLz4KPHRleHQgeD0iMzYiIHk9IjQ1IiBmb250LXNpemU9IjM2IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+💧PC90ZXh0Pgo8L3N2Zz4K",
+      "sizes": "72x72",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA5NiA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2IiByeD0iMTYiIGZpbGw9IiMyMTgwODUiLz4KPHRleHQgeD0iNDgiIHk9IjU4IiBmb250LXNpemU9IjQ4IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+💧PC90ZXh0Pgo8L3N2Zz4K", 
+      "sizes": "96x96",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTQ0IiBoZWlnaHQ9IjE0NCIgdmlld0JveD0iMCAwIDE0NCAxNDQiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxNDQiIGhlaWdodD0iMTQ0IiByeD0iMjQiIGZpbGw9IiMyMTgwODUiLz4KPHRleHQgeD0iNzIiIHk9Ijg2IiBmb250LXNpemU9IjcyIiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+💧PC90ZXh0Pgo8L3N2Zz4K",
+      "sizes": "144x144",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iMzIiIGZpbGw9IiMyMTgwODUiLz4KPHRleHQgeD0iOTYiIHk9IjExNSIgZm9udC1zaXplPSI5NiIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPjwvZz4KPGRlZnM+CjxjbGlwUGF0aCBpZD0iY2xpcDBfMTIzXzQ1NiI+CjxyZWN0IHdpZHRoPSIxOTIiIGhlaWdodD0iMTkyIiByeD0iMzIiIGZpbGw9IndoaXRlIi8+CjwvY2xpcFBhdGg+CjwvZGVmcz4KPC9zdmc+Cg==",
+      "sizes": "192x192",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTEyIiBoZWlnaHQ9IjUxMiIgdmlld0JveD0iMCAwIDUxMiA1MTIiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiByeD0iODQiIGZpbGw9IiMyMTgwODUiLz4KPHRleHQgeD0iMjU2IiB5PSIzMDYiIGZvbnQtc2l6ZT0iMjU2IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+💧PC90ZXh0Pgo8L3N2Zz4K", 
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Add Filter",
+      "short_name": "Add", 
+      "description": "Add a new water filter to track",
+      "url": "./index.html#add",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA5NiA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2IiByeD0iMTYiIGZpbGw9IiMyMTgwODUiLz4KPGxpbmUgeDE9IjQ4IiB5MT0iMzAiIHgyPSI0OCIgeTI9IjY2IiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgo8bGluZSB4MT0iMzAiIHkxPSI0OCIgeDI9IjY2IiB5Mj0iNDgiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "View History",
+      "short_name": "History", 
+      "description": "View replacement history",
+      "url": "./index.html#history",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA5NiA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2IiByeD0iMTYiIGZpbGw9IiMyMTgwODUiLz4KPGNpcmNsZSBjeD0iNDgiIGN5PSI0OCIgcj0iMTgiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNCIvPgo8cGF0aCBkPSJNNDggMzhWNDhMNTQgNTQiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS13aWR0aD0iNCIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIi8+Cjwvc3ZnPgo=",
+          "sizes": "96x96"
+        }
+      ]
+    },
+    {
+      "name": "View Statistics",
+      "short_name": "Stats", 
+      "description": "View filter statistics and insights",
+      "url": "./index.html#statistics",
+      "icons": [
+        {
+          "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iOTYiIGhlaWdodD0iOTYiIHZpZXdCb3g9IjAgMCA5NiA5NiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9Ijk2IiBoZWlnaHQ9Ijk2IiByeD0iMTYiIGZpbGw9IiMyMTgwODUiLz4KPHBhdGggZD0iTTMwIDY2TDQ2IDUwTDUyIDU2TDY2IDQyIiBzdHJva2U9IndoaXRlIiBzdHJva2Utd2lkdGg9IjQiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgo8cmVjdCB4PSIzNCIgeT0iNTQiIHdpZHRoPSI2IiBoZWlnaHQ9IjEyIiBmaWxsPSJ3aGl0ZSIvPgo8cmVjdCB4PSI0MiIgeT0iNDgiIHdpZHRoPSI2IiBoZWlnaHQ9IjE4IiBmaWxsPSJ3aGl0ZSIvPgo8cmVjdCB4PSI1MCIgeT0iNDIiIHdpZHRoPSI2IiBoZWlnaHQ9IjI0IiBmaWxsPSJ3aGl0ZSIvPgo8cmVjdCB4PSI1OCIgeT0iMzYiIHdpZHRoPSI2IiBoZWlnaHQ9IjMwIiBmaWxsPSJ3aGl0ZSIvPgo8L3N2Zz4K",
+          "sizes": "96x96"
+        }
+      ]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNTQwIiBoZWlnaHQ9Ijk2MCIgdmlld0JveD0iMCAwIDU0MCA5NjAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+CjxyZWN0IHdpZHRoPSI1NDAiIGhlaWdodD0iOTYwIiBmaWxsPSIjRkNGQ0Y5Ii8+CjxyZWN0IHg9IjIwIiB5PSI4MCIgd2lkdGg9IjUwMCIgaGVpZ2h0PSI2MCIgcng9IjEyIiBmaWxsPSIjMjE4MDg1Ii8+Cjx0ZXh0IHg9IjI3MCIgeT0iMTE1IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIyMCI+QXF1YVRyYWNrZXI8L3RleHQ+CjxyZWN0IHg9IjIwIiB5PSIxNjAiIHdpZHRoPSIxMjAiIGhlaWdodD0iODAiIHJ4PSIxMiIgZmlsbD0id2hpdGUiIHN0cm9rZT0iI2UwZTBlMCIvPgo8cmVjdCB4PSIxNjAiIHk9IjE2MCIgd2lkdGg9IjEyMCIgaGVpZ2h0PSI4MCIgcng9IjEyIiBmaWxsPSJ3aGl0ZSIgc3Ryb2tlPSIjZTBlMGUwIi8+CjxyZWN0IHg9IjMwMCIgeT0iMTYwIiB3aWR0aD0iMTIwIiBoZWlnaHQ9IjgwIiByeD0iMTIiIGZpbGw9IndoaXRlIiBzdHJva2U9IiNlMGUwZTAiLz4KPHJlY3QgeD0iNDQwIiB5PSIxNjAiIHdpZHRoPSI4MCIgaGVpZ2h0PSI4MCIgcng9IjEyIiBmaWxsPSJ3aGl0ZSIgc3Ryb2tlPSIjZTBlMGUwIi8+CjxyZWN0IHg9IjIwIiB5PSIyNjAiIHdpZHRoPSIyNDAiIGhlaWdodD0iMTIwIiByeD0iMTIiIGZpbGw9IndoaXRlIiBzdHJva2U9IiNlMGUwZTAiLz4KPHJlY3QgeD0iMjgwIiB5PSIyNjAiIHdpZHRoPSIyNDAiIGhlaWdodD0iMTIwIiByeD0iMTIiIGZpbGw9IndoaXRlIiBzdHJva2U9IiNlMGUwZTAiLz4KPC9zdmc+Cg==",
+      "sizes": "540x960",
+      "type": "image/svg+xml",
+      "form_factor": "narrow",
+      "label": "AquaTracker Dashboard - Mobile View"
+    },
+    {
+      "src": "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMTI4MCIgaGVpZ2h0PSI4MDAiIHZpZXdCb3g9IjAgMCAxMjgwIDgwMCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjEyODAiIGhlaWdodD0iODAwIiBmaWxsPSIjRkNGQ0Y5Ii8+CjxyZWN0IHg9IjQwIiB5PSI2MCIgd2lkdGg9IjEyMDAiIGhlaWdodD0iODAiIHJ4PSIxMiIgZmlsbD0iIzIxODA4NSIvPgo8dGV4dCB4PSI2NDAiIHk9IjEwNSIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGZvbnQtc2l6ZT0iMjQiPkFxdWFUcmFja2VyIC0gV2F0ZXIgRmlsdGVyIE1hbmFnZXI8L3RleHQ+CjxyZWN0IHg9IjQwIiB5PSIxNjAiIHdpZHRoPSIyODAiIGhlaWdodD0iMTIwIiByeD0iMTIiIGZpbGw9IndoaXRlIiBzdHJva2U9IiNlMGUwZTAiLz4KPHJlY3QgeD0iMzQwIiB5PSIxNjAiIHdpZHRoPSIyODAiIGhlaWdodD0iMTIwIiByeD0iMTIiIGZpbGw9IndoaXRlIiBzdHJva2U9IiNlMGUwZTAiLz4KPHJlY3QgeD0iNjQwIiB5PSIxNjAiIHdpZHRoPSIyODAiIGhlaWdodD0iMTIwIiByeD0iMTIiIGZpbGw9IndoaXRlIiBzdHJva2U9IiNlMGUwZTAiLz4KPHJlY3QgeD0iOTQwIiB5PSIxNjAiIHdpZHRoPSIzMDAiIGhlaWdodD0iMTIwIiByeD0iMTIiIGZpbGw9IndoaXRlIiBzdHJva2U9IiNlMGUwZTAiLz4KPC9zdmc+Cg==",
+      "sizes": "1280x800",
+      "type": "image/svg+xml", 
+      "form_factor": "wide",
+      "label": "AquaTracker Dashboard - Desktop View"
+    }
+  ],
+  "prefer_related_applications": false,
+  "id": "aquatracker-pwa",
+  "launch_handler": {
+    "client_mode": "navigate-new"
+  },
+  "edge_side_panel": {
+    "preferred_width": 400
+  }
+}
