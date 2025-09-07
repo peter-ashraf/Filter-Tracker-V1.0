@@ -1,5 +1,5 @@
-// AquaTracker - Complete Application with All Features
-console.log('🌊 AquaTracker: Starting complete application...');
+// AquaTracker - Fixed Theme Switching + Advanced Toggle
+console.log('🌊 AquaTracker: Starting with fixed theme system...');
 
 class AquaTracker {
     constructor() {
@@ -337,10 +337,13 @@ class AquaTracker {
     bindEvents() {
         console.log('🔗 Binding events...');
         
-        // Theme toggle switch
+        // Theme toggle switch - FIXED
         const themeToggle = document.getElementById('theme-toggle');
         if (themeToggle) {
-            themeToggle.addEventListener('change', () => this.toggleTheme());
+            themeToggle.addEventListener('change', () => {
+                console.log('🎨 Theme toggle clicked!');
+                this.toggleTheme();
+            });
             console.log('✅ Theme toggle bound');
         }
 
@@ -525,30 +528,63 @@ class AquaTracker {
         }
     }
 
-    // Theme Management
+    // FIXED Theme Management
     initializeTheme() {
-        console.log('🎨 Initializing theme...');
+        console.log('🎨 Initializing theme system...');
         const savedTheme = localStorage.getItem('theme') || 'light';
-        this.setTheme(savedTheme);
+        console.log('🎨 Saved theme:', savedTheme);
+        this.setTheme(savedTheme, false); // false = no animation on init
     }
 
     toggleTheme() {
+        console.log('🎨 toggleTheme() called');
         const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        console.log('🎨 Current theme:', currentTheme);
         const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        this.setTheme(newTheme);
-        console.log(`🎨 Theme toggled to: ${newTheme}`);
+        console.log('🎨 Switching to theme:', newTheme);
+        this.setTheme(newTheme, true); // true = with animation
     }
 
-    setTheme(theme) {
-        document.documentElement.setAttribute('data-theme', theme);
-        localStorage.setItem('theme', theme);
+    setTheme(theme, animate = true) {
+        console.log('🎨 setTheme() called with:', theme, 'animate:', animate);
         
+        // Add transition class for smooth theme change
+        if (animate) {
+            document.body.classList.add('theme-transitioning');
+            setTimeout(() => {
+                document.body.classList.remove('theme-transitioning');
+            }, 500);
+        }
+        
+        // Set the data-theme attribute on the HTML element (this is crucial!)
+        document.documentElement.setAttribute('data-theme', theme);
+        console.log('🎨 Set data-theme on HTML element to:', theme);
+        
+        // Also set on body for extra compatibility
+        document.body.setAttribute('data-theme', theme);
+        
+        // Save to localStorage
+        localStorage.setItem('theme', theme);
+        console.log('🎨 Saved theme to localStorage:', theme);
+        
+        // Update the toggle switch position and icon
         const themeToggle = document.getElementById('theme-toggle');
         if (themeToggle) {
             themeToggle.checked = (theme === 'dark');
+            console.log('🎨 Updated toggle switch checked state:', themeToggle.checked);
         }
         
-        console.log(`🎨 Theme set to: ${theme}`);
+        // Force a style recalculation
+        if (animate) {
+            document.body.offsetHeight; // Trigger reflow
+        }
+        
+        console.log('🎨 Theme successfully set to:', theme);
+        
+        // Debug: Check computed styles
+        const computedBodyStyle = getComputedStyle(document.body);
+        console.log('🎨 Body background after theme change:', computedBodyStyle.backgroundColor);
+        console.log('🎨 Body color after theme change:', computedBodyStyle.color);
     }
 
     // Notification Management
@@ -569,9 +605,9 @@ class AquaTracker {
                     this.updateNotificationIcon(true);
                     this.closeModal('notification-modal');
                     
+                    // FIXED: Remove the broken icon parameter
                     new Notification('🔔 AquaTracker', {
-                        body: 'Advanced notifications enabled! You\'ll get customized reminders for each filter.',
-                        icon: 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNCIgZmlsbD0iIzIxODA4NSIvPgo8dGV4dCB4PSIxNiIgeT0iMjAiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+💧</dGV4dD4KPC9zdmc+'
+                        body: 'Advanced notifications enabled! You\'ll get customized reminders for each filter.'
                     });
                 } else {
                     alert('Please enable notifications in your browser settings to receive advanced filter reminders.');
