@@ -1,1379 +1,541 @@
-// AquaTracker - Fixed Theme Switching + Advanced Toggle
-console.log('🌊 AquaTracker: Starting with fixed theme system...');
-
-class AquaTracker {
-    constructor() {
-        this.filters = [];
-        this.history = [];
-        this.editingFilterId = null;
-        this.currentTab = 'dashboard';
-        this.installPromptEvent = null;
-        this.currency = 'EGP'; // Default to Egyptian Pound
-        this.pendingDeleteId = null;
-        
-        console.log('AquaTracker: Initializing complete application...');
-        this.init();
-    }
-
-    init() {
-        try {
-            this.loadInitialData();
-            this.bindEvents();
-            this.updateStats();
-            this.renderFilters();
-            this.initializeTheme();
-            this.initializeTabs();
-            this.initializePWA();
-            this.loadCurrency();
-            console.log('✅ AquaTracker: Complete application loaded successfully');
-        } catch (error) {
-            console.error('❌ AquaTracker: Initialization error:', error);
-        }
-    }
-
-    loadInitialData() {
-        console.log('📊 Loading initial data with EGP currency...');
-        
-        const storedFilters = localStorage.getItem('waterFilters');
-        const storedHistory = localStorage.getItem('filterHistory');
-        
-        if (storedFilters) {
-            this.filters = JSON.parse(storedFilters);
-        } else {
-            // Pre-install 7-stage RO system with EGP pricing and advanced notifications
-            this.filters = [
-                {
-                    id: 'stage-1',
-                    name: 'Sediment Pre-Filter',
-                    location: 'RO System - Kitchen',
-                    stage: 'Stage 1',
-                    type: 'Sediment',
-                    brand: 'APEC',
-                    model: 'FI-SED-10',
-                    installDate: '2024-03-15',
-                    replacementInterval: 6,
-                    nextDueDate: '2024-09-15',
-                    cost: 240, // EGP pricing
-                    notes: 'First stage - removes sediment, dirt, and rust particles',
-                    isActive: true,
-                    notificationSettings: {
-                        buyReminder: {
-                            enabled: true,
-                            timing: 14,
-                            frequency: 'weekly',
-                            time: '09:00',
-                            stopDays: 7
-                        },
-                        replaceReminder: {
-                            enabled: true,
-                            timing: 1,
-                            frequency: 'daily',
-                            time: '10:00',
-                            overdueEscalation: 'every-2-hours'
-                        },
-                        criticalReminder: {
-                            enabled: false,
-                            threshold: 14,
-                            frequency: 'hourly'
-                        }
-                    }
-                },
-                {
-                    id: 'stage-2',
-                    name: 'Carbon Pre-Filter',
-                    location: 'RO System - Kitchen',
-                    stage: 'Stage 2',
-                    type: 'Carbon',
-                    brand: 'APEC',
-                    model: 'FI-GAC-10',
-                    installDate: '2024-04-01',
-                    replacementInterval: 6,
-                    nextDueDate: '2024-10-01',
-                    cost: 288,
-                    notes: 'Second stage - removes chlorine, taste, and odor',
-                    isActive: true,
-                    notificationSettings: {
-                        buyReminder: {
-                            enabled: true,
-                            timing: 14,
-                            frequency: 'weekly',
-                            time: '09:00',
-                            stopDays: 7
-                        },
-                        replaceReminder: {
-                            enabled: true,
-                            timing: 1,
-                            frequency: 'daily',
-                            time: '10:00',
-                            overdueEscalation: 'every-2-hours'
-                        },
-                        criticalReminder: {
-                            enabled: false,
-                            threshold: 14,
-                            frequency: 'hourly'
-                        }
-                    }
-                },
-                {
-                    id: 'stage-3',
-                    name: 'Carbon Block Filter',
-                    location: 'RO System - Kitchen',
-                    stage: 'Stage 3',
-                    type: 'Carbon Block',
-                    brand: 'APEC',
-                    model: 'FI-CB-10',
-                    installDate: '2024-01-20',
-                    replacementInterval: 9,
-                    nextDueDate: '2024-10-20',
-                    cost: 400,
-                    notes: 'Third stage - final pre-filtration before RO membrane',
-                    isActive: true,
-                    notificationSettings: {
-                        buyReminder: {
-                            enabled: true,
-                            timing: 21,
-                            frequency: 'weekly',
-                            time: '09:00',
-                            stopDays: 14
-                        },
-                        replaceReminder: {
-                            enabled: true,
-                            timing: 3,
-                            frequency: 'daily',
-                            time: '10:00',
-                            overdueEscalation: 'every-2-hours'
-                        },
-                        criticalReminder: {
-                            enabled: false,
-                            threshold: 14,
-                            frequency: 'hourly'
-                        }
-                    }
-                },
-                {
-                    id: 'stage-4',
-                    name: 'RO Membrane',
-                    location: 'RO System - Kitchen',
-                    stage: 'Stage 4',
-                    type: 'RO Membrane',
-                    brand: 'APEC',
-                    model: 'MEM-75-RO',
-                    installDate: '2023-08-10',
-                    replacementInterval: 24,
-                    nextDueDate: '2025-08-10',
-                    cost: 1360,
-                    notes: 'Fourth stage - reverse osmosis membrane for pure water',
-                    isActive: true,
-                    notificationSettings: {
-                        buyReminder: {
-                            enabled: true,
-                            timing: 30,
-                            frequency: 'weekly',
-                            time: '09:00',
-                            stopDays: 14
-                        },
-                        replaceReminder: {
-                            enabled: true,
-                            timing: 7,
-                            frequency: 'daily',
-                            time: '10:00',
-                            overdueEscalation: 'every-6-hours'
-                        },
-                        criticalReminder: {
-                            enabled: true,
-                            threshold: 30,
-                            frequency: 'hourly'
-                        }
-                    }
-                },
-                {
-                    id: 'stage-5',
-                    name: 'Post Carbon Filter',
-                    location: 'RO System - Kitchen',
-                    stage: 'Stage 5',
-                    type: 'Post Carbon',
-                    brand: 'APEC',
-                    model: 'FI-GAC-T33',
-                    installDate: '2023-12-05',
-                    replacementInterval: 12,
-                    nextDueDate: '2024-12-05',
-                    cost: 352,
-                    notes: 'Fifth stage - final taste and odor polishing',
-                    isActive: true,
-                    notificationSettings: {
-                        buyReminder: {
-                            enabled: true,
-                            timing: 21,
-                            frequency: 'weekly',
-                            time: '09:00',
-                            stopDays: 7
-                        },
-                        replaceReminder: {
-                            enabled: true,
-                            timing: 3,
-                            frequency: 'daily',
-                            time: '10:00',
-                            overdueEscalation: 'every-2-hours'
-                        },
-                        criticalReminder: {
-                            enabled: false,
-                            threshold: 14,
-                            frequency: 'hourly'
-                        }
-                    }
-                },
-                {
-                    id: 'stage-6',
-                    name: 'Alkaline Mineral Filter',
-                    location: 'RO System - Kitchen',
-                    stage: 'Stage 6',
-                    type: 'Mineral',
-                    brand: 'APEC',
-                    model: 'FI-AL-10',
-                    installDate: '2024-02-28',
-                    replacementInterval: 12,
-                    nextDueDate: '2025-02-28',
-                    cost: 560,
-                    notes: 'Sixth stage - adds beneficial minerals and balances pH',
-                    isActive: true,
-                    notificationSettings: {
-                        buyReminder: {
-                            enabled: true,
-                            timing: 21,
-                            frequency: 'weekly',
-                            time: '09:00',
-                            stopDays: 7
-                        },
-                        replaceReminder: {
-                            enabled: true,
-                            timing: 3,
-                            frequency: 'daily',
-                            time: '10:00',
-                            overdueEscalation: 'every-2-hours'
-                        },
-                        criticalReminder: {
-                            enabled: false,
-                            threshold: 14,
-                            frequency: 'hourly'
-                        }
-                    }
-                },
-                {
-                    id: 'stage-7',
-                    name: 'UV Sterilizer Lamp',
-                    location: 'RO System - Kitchen',
-                    stage: 'Stage 7',
-                    type: 'UV Lamp',
-                    brand: 'APEC',
-                    model: 'UV-11W',
-                    installDate: '2024-01-15',
-                    replacementInterval: 12,
-                    nextDueDate: '2025-01-15',
-                    cost: 720,
-                    notes: 'Seventh stage - UV sterilization for bacteria-free water',
-                    isActive: true,
-                    notificationSettings: {
-                        buyReminder: {
-                            enabled: true,
-                            timing: 30,
-                            frequency: 'weekly',
-                            time: '09:00',
-                            stopDays: 14
-                        },
-                        replaceReminder: {
-                            enabled: true,
-                            timing: 7,
-                            frequency: 'daily',
-                            time: '10:00',
-                            overdueEscalation: 'every-6-hours'
-                        },
-                        criticalReminder: {
-                            enabled: true,
-                            threshold: 14,
-                            frequency: 'hourly'
-                        }
-                    }
-                }
-            ];
-            this.saveData();
-        }
-
-        // Load history with EGP values
-        if (storedHistory) {
-            this.history = JSON.parse(storedHistory);
-        } else {
-            this.history = this.generateSampleHistory();
-            this.saveHistory();
-        }
-        
-        console.log(`📊 Loaded ${this.filters.length} filters and ${this.history.length} history items with EGP pricing`);
-    }
-
-    generateSampleHistory() {
-        const sampleHistory = [];
-        const today = new Date();
-        
-        // Generate realistic history with EGP pricing
-        for (let i = 0; i < 16; i++) {
-            const date = new Date(today);
-            date.setDate(date.getDate() - (i * 30 + Math.random() * 20));
-            
-            const randomFilter = this.filters[Math.floor(Math.random() * this.filters.length)];
-            
-            sampleHistory.push({
-                id: 'history-' + Date.now() + '-' + i,
-                filterId: randomFilter.id,
-                filterName: randomFilter.name,
-                date: date.toISOString().split('T')[0],
-                cost: randomFilter.cost || 0,
-                notes: `Scheduled replacement - ${randomFilter.name}`,
-                type: 'replacement'
-            });
-        }
-        
-        return sampleHistory.sort((a, b) => new Date(b.date) - new Date(a.date));
-    }
-
-    bindEvents() {
-        console.log('🔗 Binding events...');
-        
-        // Theme toggle switch - FIXED
-        const themeToggle = document.getElementById('theme-toggle');
-        if (themeToggle) {
-            themeToggle.addEventListener('change', () => {
-                console.log('🎨 Theme toggle clicked!');
-                this.toggleTheme();
-            });
-            console.log('✅ Theme toggle bound');
-        }
-
-        // Notification toggle
-        const notificationToggle = document.getElementById('notification-toggle');
-        if (notificationToggle) {
-            notificationToggle.addEventListener('click', () => this.toggleNotifications());
-            console.log('✅ Notification toggle bound');
-        }
-
-        // Tab navigation
-        const tabButtons = document.querySelectorAll('.tab-btn');
-        tabButtons.forEach(btn => {
-            btn.addEventListener('click', () => this.switchTab(btn.dataset.tab));
-        });
-        console.log(`✅ Bound ${tabButtons.length} tab buttons`);
-
-        // Add filter button
-        const addBtn = document.getElementById('add-filter-btn');
-        if (addBtn) {
-            addBtn.addEventListener('click', () => this.showAddFilterModal());
-            console.log('✅ Add filter button bound');
-        }
-
-        // Search
-        const searchInput = document.getElementById('search-input');
-        if (searchInput) {
-            searchInput.addEventListener('input', (e) => this.searchFilters(e.target.value));
-            console.log('✅ Search input bound');
-        }
-
-        // History controls
-        const historyFilter = document.getElementById('history-filter');
-        if (historyFilter) {
-            historyFilter.addEventListener('change', () => this.renderHistory());
-        }
-
-        const exportHistory = document.getElementById('export-history');
-        if (exportHistory) {
-            exportHistory.addEventListener('click', () => this.exportHistory());
-        }
-
-        const clearHistory = document.getElementById('clear-history');
-        if (clearHistory) {
-            clearHistory.addEventListener('click', () => this.clearHistory());
-        }
-
-        // Settings
-        const exportData = document.getElementById('export-data');
-        if (exportData) {
-            exportData.addEventListener('click', () => this.exportAllData());
-        }
-
-        const importData = document.getElementById('import-data');
-        const importFile = document.getElementById('import-file');
-        if (importData && importFile) {
-            importData.addEventListener('click', () => importFile.click());
-            importFile.addEventListener('change', (e) => this.importData(e));
-        }
-
-        const resetData = document.getElementById('reset-data');
-        if (resetData) {
-            resetData.addEventListener('click', () => this.confirmResetData());
-        }
-
-        // Currency selector
-        const currencySelect = document.getElementById('currency-select');
-        if (currencySelect) {
-            currencySelect.addEventListener('change', (e) => this.setCurrency(e.target.value));
-        }
-
-        // Advanced notification toggles
-        const buyReminderEnabled = document.getElementById('buy-reminder-enabled');
-        const replaceReminderEnabled = document.getElementById('replace-reminder-enabled');
-        const criticalReminderEnabled = document.getElementById('critical-reminder-enabled');
-
-        if (buyReminderEnabled) {
-            buyReminderEnabled.addEventListener('change', () => this.toggleNotificationSection('buy-reminder-settings', buyReminderEnabled.checked));
-        }
-        if (replaceReminderEnabled) {
-            replaceReminderEnabled.addEventListener('change', () => this.toggleNotificationSection('replace-reminder-settings', replaceReminderEnabled.checked));
-        }
-        if (criticalReminderEnabled) {
-            criticalReminderEnabled.addEventListener('change', () => this.toggleNotificationSection('critical-reminder-settings', criticalReminderEnabled.checked));
-        }
-
-        // Modal events
-        this.bindModalEvents();
-
-        // Install prompt
-        const installBtn = document.getElementById('install-btn');
-        const installDismiss = document.getElementById('install-dismiss');
-        if (installBtn) installBtn.addEventListener('click', () => this.installPWA());
-        if (installDismiss) installDismiss.addEventListener('click', () => this.dismissInstallPrompt());
-    }
-
-    bindModalEvents() {
-        // Filter modal
-        const filterForm = document.getElementById('filter-form');
-        const cancelBtn = document.getElementById('cancel-btn');
-        const closeButtons = document.querySelectorAll('.modal-close');
-
-        if (filterForm) {
-            filterForm.addEventListener('submit', (e) => this.handleFilterSubmit(e));
-        }
-        
-        if (cancelBtn) {
-            cancelBtn.addEventListener('click', () => this.closeModal('filter-modal'));
-        }
-
-        // Close modal buttons
-        closeButtons.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const modal = e.target.closest('.modal');
-                if (modal) this.closeModal(modal.id);
-            });
-        });
-
-        // Confirm modal
-        const confirmOk = document.getElementById('confirm-ok');
-        const confirmCancel = document.getElementById('confirm-cancel');
-        if (confirmOk) confirmOk.addEventListener('click', () => this.handleConfirmOk());
-        if (confirmCancel) confirmCancel.addEventListener('click', () => this.closeModal('confirm-modal'));
-
-        // Notification modal
-        const notificationEnable = document.getElementById('notification-enable');
-        const notificationCancel = document.getElementById('notification-cancel');
-        if (notificationEnable) notificationEnable.addEventListener('click', () => this.enableNotifications());
-        if (notificationCancel) notificationCancel.addEventListener('click', () => this.closeModal('notification-modal'));
-
-        // Close modal when clicking outside
-        document.addEventListener('click', (e) => {
-            if (e.target.classList.contains('modal')) {
-                this.closeModal(e.target.id);
-            }
-        });
-    }
-
-    // Currency Management
-    loadCurrency() {
-        const saved = localStorage.getItem('currency') || 'EGP';
-        this.setCurrency(saved);
-    }
-
-    setCurrency(currency) {
-        this.currency = currency;
-        localStorage.setItem('currency', currency);
-        
-        const select = document.getElementById('currency-select');
-        if (select) {
-            select.value = currency;
-        }
-        
-        // Update all displayed values
-        this.updateStats();
-        this.renderFilters();
-        if (this.currentTab === 'statistics') {
-            this.renderStatistics();
-        }
-        if (this.currentTab === 'history') {
-            this.renderHistory();
-        }
-        
-        console.log(`💱 Currency set to: ${currency}`);
-    }
-
-    formatCurrency(amount) {
-        const symbols = {
-            'USD': '$',
-            'EUR': '€',
-            'GBP': '£',
-            'CAD': '$',
-            'EGP': 'ج.م'
-        };
-        
-        const symbol = symbols[this.currency] || this.currency;
-        
-        if (this.currency === 'EGP') {
-            return `${symbol} ${amount.toLocaleString('ar-EG')}`;
-        } else {
-            return `${symbol}${amount.toLocaleString()}`;
-        }
-    }
-
-    // FIXED Theme Management
-    initializeTheme() {
-        console.log('🎨 Initializing theme system...');
-        const savedTheme = localStorage.getItem('theme') || 'light';
-        console.log('🎨 Saved theme:', savedTheme);
-        this.setTheme(savedTheme, false); // false = no animation on init
-    }
-
-    toggleTheme() {
-        console.log('🎨 toggleTheme() called');
-        const currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
-        console.log('🎨 Current theme:', currentTheme);
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        console.log('🎨 Switching to theme:', newTheme);
-        this.setTheme(newTheme, true); // true = with animation
-    }
-
-    setTheme(theme, animate = true) {
-        console.log('🎨 setTheme() called with:', theme, 'animate:', animate);
-        
-        // Add transition class for smooth theme change
-        if (animate) {
-            document.body.classList.add('theme-transitioning');
-            setTimeout(() => {
-                document.body.classList.remove('theme-transitioning');
-            }, 500);
-        }
-        
-        // Set the data-theme attribute on the HTML element (this is crucial!)
-        document.documentElement.setAttribute('data-theme', theme);
-        console.log('🎨 Set data-theme on HTML element to:', theme);
-        
-        // Also set on body for extra compatibility
-        document.body.setAttribute('data-theme', theme);
-        
-        // Save to localStorage
-        localStorage.setItem('theme', theme);
-        console.log('🎨 Saved theme to localStorage:', theme);
-        
-        // Update the toggle switch position and icon
-        const themeToggle = document.getElementById('theme-toggle');
-        if (themeToggle) {
-            themeToggle.checked = (theme === 'dark');
-            console.log('🎨 Updated toggle switch checked state:', themeToggle.checked);
-        }
-        
-        // Force a style recalculation
-        if (animate) {
-            document.body.offsetHeight; // Trigger reflow
-        }
-        
-        console.log('🎨 Theme successfully set to:', theme);
-        
-        // Debug: Check computed styles
-        const computedBodyStyle = getComputedStyle(document.body);
-        console.log('🎨 Body background after theme change:', computedBodyStyle.backgroundColor);
-        console.log('🎨 Body color after theme change:', computedBodyStyle.color);
-    }
-
-    // Notification Management
-    toggleNotifications() {
-        const enabled = localStorage.getItem('notifications-enabled') === 'true';
-        if (enabled) {
-            this.disableNotifications();
-        } else {
-            this.showModal('notification-modal');
-        }
-    }
-
-    enableNotifications() {
-        if ('Notification' in window) {
-            Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                    localStorage.setItem('notifications-enabled', 'true');
-                    this.updateNotificationIcon(true);
-                    this.closeModal('notification-modal');
-                    
-                    // FIXED: Remove the broken icon parameter
-                    new Notification('🔔 AquaTracker', {
-                        body: 'Advanced notifications enabled! You\'ll get customized reminders for each filter.'
-                    });
-                } else {
-                    alert('Please enable notifications in your browser settings to receive advanced filter reminders.');
-                }
-            });
-        }
-    }
-
-    disableNotifications() {
-        localStorage.setItem('notifications-enabled', 'false');
-        this.updateNotificationIcon(false);
-    }
-
-    updateNotificationIcon(enabled) {
-        const icon = document.querySelector('.notification-icon');
-        if (icon) {
-            icon.textContent = enabled ? '🔔' : '🔕';
-        }
-    }
-
-    toggleNotificationSection(sectionId, enabled) {
-        const section = document.getElementById(sectionId);
-        if (section) {
-            section.style.display = enabled ? 'block' : 'none';
-        }
-    }
-
-    // Tab Management
-    initializeTabs() {
-        this.switchTab('dashboard');
-    }
-
-    switchTab(tabName) {
-        console.log(`📑 Switching to tab: ${tabName}`);
-        
-        // Update tab buttons
-        document.querySelectorAll('.tab-btn').forEach(btn => {
-            btn.classList.remove('active');
-        });
-        const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
-        if (activeTab) activeTab.classList.add('active');
-
-        // Update tab content
-        document.querySelectorAll('.tab-content').forEach(content => {
-            content.classList.remove('active');
-        });
-        const activeContent = document.getElementById(`${tabName}-tab`);
-        if (activeContent) activeContent.classList.add('active');
-
-        this.currentTab = tabName;
-
-        // Load content for specific tabs
-        if (tabName === 'history') {
-            this.renderHistory();
-        } else if (tabName === 'statistics') {
-            this.renderStatistics();
-        }
-    }
-
-    // Filter Management
-    renderFilters() {
-        console.log('🔄 Rendering filters...');
-        const grid = document.getElementById('filters-grid');
-        if (!grid) {
-            console.error('❌ Filters grid not found');
-            return;
-        }
-
-        const searchTerm = document.getElementById('search-input')?.value.toLowerCase() || '';
-        const filteredFilters = this.filters.filter(filter => 
-            filter.name.toLowerCase().includes(searchTerm) ||
-            filter.location.toLowerCase().includes(searchTerm) ||
-            filter.type.toLowerCase().includes(searchTerm)
-        );
-
-        if (filteredFilters.length === 0) {
-            grid.innerHTML = `
-                <div class="empty-state" style="grid-column: 1 / -1;">
-                    <div class="empty-icon">💧</div>
-                    <h3>No Filters Found</h3>
-                    <p>Try adjusting your search or add a new filter.</p>
-                </div>
-            `;
-            return;
-        }
-
-        grid.innerHTML = filteredFilters.map(filter => this.createFilterCard(filter)).join('');
-        
-        // Bind filter card events
-        grid.querySelectorAll('.filter-card').forEach(card => {
-            const filterId = card.dataset.filterId;
-            
-            card.addEventListener('click', (e) => {
-                if (!e.target.closest('.filter-actions')) {
-                    this.editFilter(filterId);
-                }
-            });
-            
-            const deleteBtn = card.querySelector('.delete-btn');
-            if (deleteBtn) {
-                deleteBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.deleteFilter(filterId);
-                });
-            }
-
-            const replaceBtn = card.querySelector('.replace-btn');
-            if (replaceBtn) {
-                replaceBtn.addEventListener('click', (e) => {
-                    e.stopPropagation();
-                    this.markAsReplaced(filterId);
-                });
-            }
-        });
-
-        console.log(`✅ Rendered ${filteredFilters.length} filter cards`);
-    }
-
-    createFilterCard(filter) {
-        const status = this.getFilterStatus(filter);
-        const daysUntilDue = this.getDaysUntilDue(filter.nextDueDate);
-        
-        return `
-            <div class="filter-card ${status}" data-filter-id="${filter.id}">
-                <div class="filter-header">
-                    <div class="filter-stage">${filter.stage || 'Filter'}</div>
-                    <div class="filter-actions">
-                        <button class="action-btn replace-btn" title="Mark as Replaced">🔄</button>
-                        <button class="action-btn delete-btn" title="Delete Filter">🗑️</button>
-                    </div>
-                </div>
-                <div class="filter-content">
-                    <h3 class="filter-name">${filter.name}</h3>
-                    <p class="filter-location">📍 ${filter.location}</p>
-                    <p class="filter-type">🔧 ${filter.type}</p>
-                    <div class="filter-status">
-                        <span class="status-indicator ${status}"></span>
-                        <span class="status-text">${this.getStatusText(status, daysUntilDue)}</span>
-                    </div>
-                    <div class="filter-details">
-                        <div class="detail-item">
-                            <span class="detail-label">Due:</span>
-                            <span class="detail-value">${this.formatDate(filter.nextDueDate)}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Interval:</span>
-                            <span class="detail-value">${filter.replacementInterval} months</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Cost:</span>
-                            <span class="detail-value">${this.formatCurrency(filter.cost)}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Notifications:</span>
-                            <span class="detail-value">${this.getNotificationSummary(filter)}</span>
-                        </div>
-                    </div>
-                </div>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AquaTracker - Water Filter Manager</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="Track your water filter replacements with smart notifications">
+    <meta name="theme-color" content="#218085">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="AquaTracker">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="./manifest.json">
+    
+    <!-- Icons -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMzIiIGhlaWdodD0iMzIiIHZpZXdCb3g9IjAgMCAzMiAzMiIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiByeD0iNCIgZmlsbD0iIzIxODA4NSIvPgo8dGV4dCB4PSIxNiIgeT0iMjAiIGZvbnQtZmFtaWx5PSJzYW5zLXNlcmlmIiBmb250LXNpemU9IjE4IiBmaWxsPSJ3aGl0ZSIgdGV4dC1hbmNob3I9Im1pZGRsZSI+💧</dGV4dD4KPC9zdmc+">
+    
+    <link rel="stylesheet" href="./style.css">
+</head>
+<body>
+    <!-- Header -->
+    <header class="app-header">
+        <div class="header-content">
+            <div class="logo-section">
+                <div class="logo">💧</div>
+                <h1 class="app-title">AquaTracker</h1>
             </div>
-        `;
-    }
-
-    getNotificationSummary(filter) {
-        const settings = filter.notificationSettings;
-        if (!settings) return 'None';
-        
-        let summary = [];
-        if (settings.buyReminder?.enabled) summary.push('Buy');
-        if (settings.replaceReminder?.enabled) summary.push('Replace');
-        if (settings.criticalReminder?.enabled) summary.push('Critical');
-        
-        return summary.length > 0 ? summary.join(', ') : 'None';
-    }
-
-    getFilterStatus(filter) {
-        const today = new Date();
-        const dueDate = new Date(filter.nextDueDate);
-        const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-
-        if (daysUntilDue < 0) return 'overdue';
-        if (daysUntilDue <= 30) return 'due-soon';
-        return 'good';
-    }
-
-    getDaysUntilDue(dueDateString) {
-        const today = new Date();
-        const dueDate = new Date(dueDateString);
-        return Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-    }
-
-    getStatusText(status, daysUntilDue) {
-        switch (status) {
-            case 'overdue':
-                return `Overdue by ${Math.abs(daysUntilDue)} days`;
-            case 'due-soon':
-                return `Due in ${daysUntilDue} days`;
-            case 'good':
-                return `${daysUntilDue} days remaining`;
-            default:
-                return 'Unknown';
-        }
-    }
-
-    formatDate(dateString) {
-        return new Date(dateString).toLocaleDateString('en-US', {
-            month: 'short',
-            day: 'numeric',
-            year: 'numeric'
-        });
-    }
-
-    // Modal Management
-    showModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'flex';
-            modal.classList.add('show');
-            document.body.style.overflow = 'hidden';
-        }
-    }
-
-    closeModal(modalId) {
-        const modal = document.getElementById(modalId);
-        if (modal) {
-            modal.style.display = 'none';
-            modal.classList.remove('show');
-            document.body.style.overflow = '';
-        }
-    }
-
-    showAddFilterModal() {
-        this.editingFilterId = null;
-        document.getElementById('modal-title').textContent = 'Add Filter';
-        this.resetFilterForm();
-        this.showModal('filter-modal');
-    }
-
-    editFilter(filterId) {
-        const filter = this.filters.find(f => f.id === filterId);
-        if (!filter) return;
-
-        this.editingFilterId = filterId;
-        document.getElementById('modal-title').textContent = 'Edit Filter';
-        this.populateFilterForm(filter);
-        this.showModal('filter-modal');
-    }
-
-    deleteFilter(filterId) {
-        const filter = this.filters.find(f => f.id === filterId);
-        if (!filter) return;
-
-        document.getElementById('confirm-message').textContent = 
-            `Are you sure you want to delete "${filter.name}"? This action cannot be undone.`;
-        
-        this.pendingDeleteId = filterId;
-        this.showModal('confirm-modal');
-    }
-
-    handleConfirmOk() {
-        if (this.pendingDeleteId) {
-            this.filters = this.filters.filter(f => f.id !== this.pendingDeleteId);
-            this.saveData();
-            this.updateStats();
-            this.renderFilters();
-            this.pendingDeleteId = null;
-            
-            console.log('🗑️ Filter deleted successfully');
-        }
-        this.closeModal('confirm-modal');
-    }
-
-    markAsReplaced(filterId) {
-        const filter = this.filters.find(f => f.id === filterId);
-        if (!filter) return;
-
-        const today = new Date();
-        const nextDue = new Date(today);
-        nextDue.setMonth(nextDue.getMonth() + filter.replacementInterval);
-
-        // Add to history
-        this.history.unshift({
-            id: 'history-' + Date.now(),
-            filterId: filter.id,
-            filterName: filter.name,
-            date: today.toISOString().split('T')[0],
-            cost: filter.cost || 0,
-            notes: `Filter replaced - ${filter.name}`,
-            type: 'replacement'
-        });
-
-        filter.installDate = today.toISOString().split('T')[0];
-        filter.nextDueDate = nextDue.toISOString().split('T')[0];
-
-        this.saveData();
-        this.saveHistory();
-        this.updateStats();
-        this.renderFilters();
-
-        // Show success message
-        alert(`✅ ${filter.name} marked as replaced! Next due: ${this.formatDate(filter.nextDueDate)}`);
-        console.log(`🔄 Filter ${filter.name} marked as replaced`);
-    }
-
-    // Form Management
-    resetFilterForm() {
-        const form = document.getElementById('filter-form');
-        if (form) form.reset();
-        
-        // Set default date to today
-        document.getElementById('filter-install-date').value = new Date().toISOString().split('T')[0];
-        
-        // Reset notification settings to defaults
-        document.getElementById('buy-reminder-enabled').checked = true;
-        document.getElementById('replace-reminder-enabled').checked = true;
-        document.getElementById('critical-reminder-enabled').checked = false;
-        
-        document.getElementById('buy-reminder-settings').style.display = 'block';
-        document.getElementById('replace-reminder-settings').style.display = 'block';
-        document.getElementById('critical-reminder-settings').style.display = 'none';
-    }
-
-    populateFilterForm(filter) {
-        document.getElementById('filter-name').value = filter.name || '';
-        document.getElementById('filter-location').value = filter.location || '';
-        document.getElementById('filter-stage').value = filter.stage || '';
-        document.getElementById('filter-type').value = filter.type || '';
-        document.getElementById('filter-interval').value = filter.replacementInterval || 6;
-        document.getElementById('filter-brand').value = filter.brand || '';
-        document.getElementById('filter-model').value = filter.model || '';
-        document.getElementById('filter-install-date').value = filter.installDate || '';
-        document.getElementById('filter-cost').value = filter.cost || '';
-        document.getElementById('filter-notes').value = filter.notes || '';
-
-        // Populate notification settings
-        const settings = filter.notificationSettings || {};
-        
-        // Buy reminder settings
-        if (settings.buyReminder) {
-            document.getElementById('buy-reminder-enabled').checked = settings.buyReminder.enabled;
-            document.getElementById('buy-reminder-timing').value = settings.buyReminder.timing;
-            document.getElementById('buy-reminder-frequency').value = settings.buyReminder.frequency;
-            document.getElementById('buy-reminder-time').value = settings.buyReminder.time;
-            document.getElementById('buy-stop-days').value = settings.buyReminder.stopDays || 0;
-            document.getElementById('buy-reminder-settings').style.display = settings.buyReminder.enabled ? 'block' : 'none';
-        }
-        
-        // Replace reminder settings
-        if (settings.replaceReminder) {
-            document.getElementById('replace-reminder-enabled').checked = settings.replaceReminder.enabled;
-            document.getElementById('replace-reminder-timing').value = settings.replaceReminder.timing;
-            document.getElementById('replace-reminder-frequency').value = settings.replaceReminder.frequency;
-            document.getElementById('replace-reminder-time').value = settings.replaceReminder.time;
-            document.getElementById('overdue-escalation').value = settings.replaceReminder.overdueEscalation;
-            document.getElementById('replace-reminder-settings').style.display = settings.replaceReminder.enabled ? 'block' : 'none';
-        }
-        
-        // Critical reminder settings
-        if (settings.criticalReminder) {
-            document.getElementById('critical-reminder-enabled').checked = settings.criticalReminder.enabled;
-            document.getElementById('critical-threshold').value = settings.criticalReminder.threshold;
-            document.getElementById('critical-frequency').value = settings.criticalReminder.frequency;
-            document.getElementById('critical-reminder-settings').style.display = settings.criticalReminder.enabled ? 'block' : 'none';
-        }
-    }
-
-    handleFilterSubmit(e) {
-        e.preventDefault();
-        
-        const filterData = {
-            name: document.getElementById('filter-name').value,
-            location: document.getElementById('filter-location').value,
-            stage: document.getElementById('filter-stage').value,
-            type: document.getElementById('filter-type').value,
-            replacementInterval: parseInt(document.getElementById('filter-interval').value),
-            brand: document.getElementById('filter-brand').value,
-            model: document.getElementById('filter-model').value,
-            installDate: document.getElementById('filter-install-date').value,
-            cost: parseFloat(document.getElementById('filter-cost').value) || 0,
-            notes: document.getElementById('filter-notes').value,
-            isActive: true,
-            notificationSettings: {
-                buyReminder: {
-                    enabled: document.getElementById('buy-reminder-enabled').checked,
-                    timing: parseInt(document.getElementById('buy-reminder-timing').value),
-                    frequency: document.getElementById('buy-reminder-frequency').value,
-                    time: document.getElementById('buy-reminder-time').value,
-                    stopDays: parseInt(document.getElementById('buy-stop-days').value)
-                },
-                replaceReminder: {
-                    enabled: document.getElementById('replace-reminder-enabled').checked,
-                    timing: parseInt(document.getElementById('replace-reminder-timing').value),
-                    frequency: document.getElementById('replace-reminder-frequency').value,
-                    time: document.getElementById('replace-reminder-time').value,
-                    overdueEscalation: document.getElementById('overdue-escalation').value
-                },
-                criticalReminder: {
-                    enabled: document.getElementById('critical-reminder-enabled').checked,
-                    threshold: parseInt(document.getElementById('critical-threshold').value),
-                    frequency: document.getElementById('critical-frequency').value
-                }
-            }
-        };
-
-        // Calculate next due date
-        const installDate = new Date(filterData.installDate);
-        const nextDue = new Date(installDate);
-        nextDue.setMonth(nextDue.getMonth() + filterData.replacementInterval);
-        filterData.nextDueDate = nextDue.toISOString().split('T')[0];
-
-        if (this.editingFilterId) {
-            // Update existing filter
-            const index = this.filters.findIndex(f => f.id === this.editingFilterId);
-            if (index !== -1) {
-                this.filters[index] = { ...this.filters[index], ...filterData };
-                console.log(`✏️ Filter updated: ${filterData.name}`);
-            }
-        } else {
-            // Add new filter
-            filterData.id = 'filter-' + Date.now();
-            this.filters.push(filterData);
-            console.log(`➕ New filter added: ${filterData.name}`);
-        }
-
-        this.saveData();
-        this.updateStats();
-        this.renderFilters();
-        this.closeModal('filter-modal');
-    }
-
-    searchFilters(searchTerm) {
-        console.log(`🔍 Searching for: ${searchTerm}`);
-        this.renderFilters();
-    }
-
-    // History Management
-    renderHistory() {
-        const historyList = document.getElementById('history-list');
-        const filterValue = document.getElementById('history-filter')?.value || 'all';
-        
-        if (!historyList) return;
-
-        let filteredHistory = [...this.history];
-        
-        if (filterValue !== 'all') {
-            const days = parseInt(filterValue);
-            const cutoffDate = new Date();
-            cutoffDate.setDate(cutoffDate.getDate() - days);
-            
-            filteredHistory = this.history.filter(item => 
-                new Date(item.date) >= cutoffDate
-            );
-        }
-
-        if (filteredHistory.length === 0) {
-            historyList.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">📋</div>
-                    <h3>No History Found</h3>
-                    <p>No filter replacements recorded for the selected period.</p>
-                </div>
-            `;
-            return;
-        }
-
-        historyList.innerHTML = filteredHistory.map(item => `
-            <div class="history-item">
-                <div class="history-content">
-                    <div class="history-header">
-                        <h4>${item.filterName}</h4>
-                        <span class="history-date">${this.formatDate(item.date)}</span>
-                    </div>
-                    <p class="history-notes">${item.notes}</p>
-                    <div class="history-details">
-                        ${item.cost > 0 ? `<span class="history-cost">${this.formatCurrency(item.cost)}</span>` : ''}
-                        <span class="history-type">${item.type === 'replacement' ? '🔄 Replacement' : '📝 Note'}</span>
-                    </div>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    exportHistory() {
-        const data = {
-            history: this.history,
-            currency: this.currency,
-            exported: new Date().toISOString(),
-            version: '3.0.0'
-        };
-        
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `aquatracker-history-${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-    }
-
-    clearHistory() {
-        if (confirm('Are you sure you want to clear all history? This cannot be undone.')) {
-            this.history = [];
-            this.saveHistory();
-            this.renderHistory();
-            console.log('🗑️ History cleared');
-        }
-    }
-
-    // Statistics Management
-    renderStatistics() {
-        this.updateStatistics();
-    }
-
-    updateStatistics() {
-        // Calculate real statistics from actual data
-        const totalCost = this.history.reduce((sum, item) => sum + (item.cost || 0), 0);
-        const avgCost = this.history.length > 0 ? totalCost / this.history.length : 0;
-        
-        // Calculate monthly average based on history timespan
-        const oldestDate = this.history.length > 0 ? 
-            new Date(Math.min(...this.history.map(h => new Date(h.date)))) : 
-            new Date();
-        const monthsDiff = Math.max(1, (Date.now() - oldestDate) / (1000 * 60 * 60 * 24 * 30));
-        const monthlyCost = totalCost / monthsDiff;
-        const yearlyProjection = monthlyCost * 12;
-
-        document.getElementById('total-cost').textContent = this.formatCurrency(totalCost);
-        document.getElementById('avg-cost').textContent = this.formatCurrency(avgCost);
-        document.getElementById('monthly-cost').textContent = this.formatCurrency(monthlyCost);
-        document.getElementById('yearly-projection').textContent = this.formatCurrency(yearlyProjection);
-
-        // Environmental impact (estimated)
-        const totalReplacements = this.history.length;
-        const bottlesSaved = totalReplacements * 600; // Conservative estimate
-        const co2Saved = Math.round(bottlesSaved * 0.16); // lbs of CO2 per bottle
-        const wasteReduced = Math.round(bottlesSaved * 0.032); // lbs of plastic per bottle
-
-        document.getElementById('bottles-saved').textContent = bottlesSaved.toLocaleString();
-        document.getElementById('co2-saved').textContent = `${co2Saved} lbs`;
-        document.getElementById('waste-reduced').textContent = `${wasteReduced} lbs`;
-
-        this.updateFilterPerformance();
-    }
-
-    updateFilterPerformance() {
-        const performanceList = document.getElementById('performance-list');
-        if (!performanceList) return;
-
-        const filterStats = this.filters.map(filter => {
-            const filterHistory = this.history.filter(h => h.filterId === filter.id);
-            const totalCost = filterHistory.reduce((sum, h) => sum + (h.cost || 0), 0);
-            const replacements = filterHistory.length;
-            const costPerMonth = replacements > 0 ? totalCost / (replacements * filter.replacementInterval) : filter.cost / filter.replacementInterval;
-
-            return {
-                ...filter,
-                totalCost,
-                replacements,
-                costPerMonth
-            };
-        }).sort((a, b) => b.costPerMonth - a.costPerMonth);
-
-        if (filterStats.length === 0) {
-            performanceList.innerHTML = `
-                <div class="empty-state">
-                    <div class="empty-icon">📈</div>
-                    <h3>No Performance Data</h3>
-                    <p>Performance data will appear after filter replacements.</p>
-                </div>
-            `;
-            return;
-        }
-
-        performanceList.innerHTML = filterStats.map(filter => `
-            <div class="performance-item">
-                <div class="performance-header">
-                    <h4>${filter.name}</h4>
-                    <span class="performance-cost">${this.formatCurrency(filter.costPerMonth)}/month</span>
-                </div>
-                <div class="performance-details">
-                    <span>Replacements: ${filter.replacements}</span>
-                    <span>Total Cost: ${this.formatCurrency(filter.totalCost)}</span>
-                    <span>Type: ${filter.type}</span>
-                    <span>Interval: ${filter.replacementInterval} months</span>
-                    <span>Notifications: ${this.getNotificationSummary(filter)}</span>
-                </div>
-            </div>
-        `).join('');
-    }
-
-    // Stats and Data
-    updateStats() {
-        const stats = this.calculateStats();
-        
-        document.getElementById('total-filters').textContent = stats.total;
-        document.getElementById('overdue-filters').textContent = stats.overdue;
-        document.getElementById('due-soon-filters').textContent = stats.dueSoon;
-        document.getElementById('good-filters').textContent = stats.good;
-
-        console.log(`📊 Stats updated:`, stats);
-    }
-
-    calculateStats() {
-        const today = new Date();
-        let overdue = 0, dueSoon = 0, good = 0;
-
-        this.filters.forEach(filter => {
-            const dueDate = new Date(filter.nextDueDate);
-            const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-
-            if (daysUntilDue < 0) overdue++;
-            else if (daysUntilDue <= 30) dueSoon++;
-            else good++;
-        });
-
-        return {
-            total: this.filters.length,
-            overdue,
-            dueSoon,
-            good
-        };
-    }
-
-    // Data Management
-    saveData() {
-        localStorage.setItem('waterFilters', JSON.stringify(this.filters));
-        console.log('💾 Filter data saved to localStorage');
-    }
-
-    saveHistory() {
-        localStorage.setItem('filterHistory', JSON.stringify(this.history));
-        console.log('💾 History data saved to localStorage');
-    }
-
-    exportAllData() {
-        const data = {
-            filters: this.filters,
-            history: this.history,
-            settings: {
-                theme: localStorage.getItem('theme'),
-                notificationsEnabled: localStorage.getItem('notifications-enabled'),
-                currency: this.currency
-            },
-            exported: new Date().toISOString(),
-            version: '3.0.0'
-        };
-        
-        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `aquatracker-complete-backup-${new Date().toISOString().split('T')[0]}.json`;
-        a.click();
-        URL.revokeObjectURL(url);
-        
-        console.log('📤 Complete data exported');
-    }
-
-    importData(event) {
-        const file = event.target.files[0];
-        if (!file) return;
-
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            try {
-                const data = JSON.parse(e.target.result);
+            <div class="header-controls">
+                <button id="notification-toggle" class="icon-btn" title="Toggle Notifications">
+                    <span class="notification-icon">🔕</span>
+                </button>
                 
-                if (confirm('This will replace all current data. Are you sure?')) {
-                    if (data.filters) this.filters = data.filters;
-                    if (data.history) this.history = data.history;
-                    if (data.settings) {
-                        if (data.settings.theme) {
-                            localStorage.setItem('theme', data.settings.theme);
-                            this.setTheme(data.settings.theme);
-                        }
-                        if (data.settings.notificationsEnabled) {
-                            localStorage.setItem('notifications-enabled', data.settings.notificationsEnabled);
-                        }
-                        if (data.settings.currency) {
-                            this.setCurrency(data.settings.currency);
-                        }
-                    }
+                <!-- WORKING Sliding Toggle -->
+                <label class="theme-switch">
+                    <input type="checkbox" id="theme-toggle">
+                    <span class="theme-slider">
+                        <span class="theme-icon"></span>
+                    </span>
+                </label>
+            </div>
+        </div>
+    </header>
+
+    <!-- Navigation Tabs -->
+    <nav class="tab-navigation">
+        <div class="container">
+            <div class="tab-buttons">
+                <button class="tab-btn active" data-tab="dashboard">
+                    <span class="tab-icon">🏠</span>
+                    <span class="tab-label">Dashboard</span>
+                </button>
+                <button class="tab-btn" data-tab="history">
+                    <span class="tab-icon">📋</span>
+                    <span class="tab-label">History</span>
+                </button>
+                <button class="tab-btn" data-tab="statistics">
+                    <span class="tab-icon">📊</span>
+                    <span class="tab-label">Statistics</span>
+                </button>
+                <button class="tab-btn" data-tab="settings">
+                    <span class="tab-icon">⚙️</span>
+                    <span class="tab-label">Settings</span>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container">
+            
+            <!-- Dashboard Tab -->
+            <div id="dashboard-tab" class="tab-content active">
+                <!-- Stats -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-number" id="total-filters">7</div>
+                        <div class="stat-label">Total Filters</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number overdue" id="overdue-filters">3</div>
+                        <div class="stat-label">Overdue</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number due-soon" id="due-soon-filters">1</div>
+                        <div class="stat-label">Due Soon</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number good" id="good-filters">3</div>
+                        <div class="stat-label">Good</div>
+                    </div>
+                </div>
+
+                <!-- Action Bar -->
+                <div class="action-bar">
+                    <input type="text" id="search-input" placeholder="Search filters..." class="search-input">
+                    <button id="add-filter-btn" class="btn btn-primary">
+                        <span>➕</span> Add Filter
+                    </button>
+                </div>
+
+                <!-- Filters Grid -->
+                <div id="filters-grid" class="filters-grid">
+                    <!-- Filters will be rendered here -->
+                </div>
+            </div>
+
+            <!-- History Tab -->
+            <div id="history-tab" class="tab-content">
+                <div class="section-header">
+                    <h2>Replacement History</h2>
+                    <div class="header-actions">
+                        <button id="export-history" class="btn btn-secondary btn-sm">
+                            <span>📥</span> Export
+                        </button>
+                        <button id="clear-history" class="btn btn-outline btn-sm">
+                            <span>🗑️</span> Clear
+                        </button>
+                    </div>
+                </div>
+                
+                <div class="history-filters">
+                    <select id="history-filter" class="form-control">
+                        <option value="all">All Filters</option>
+                        <option value="30">Last 30 Days</option>
+                        <option value="90">Last 90 Days</option>
+                        <option value="365">Last Year</option>
+                    </select>
+                </div>
+
+                <div id="history-list" class="history-list">
+                    <!-- History items will be rendered here -->
+                </div>
+            </div>
+
+            <!-- Statistics Tab -->
+            <div id="statistics-tab" class="tab-content">
+                <div class="section-header">
+                    <h2>Statistics & Insights</h2>
+                </div>
+
+                <!-- Cost Statistics -->
+                <div class="stats-section">
+                    <h3>💰 Cost Analysis</h3>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <div class="stat-number" id="total-cost">ج.م 3,920</div>
+                            <div class="stat-label">Total Spent</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="avg-cost">ج.م 560</div>
+                            <div class="stat-label">Average Cost</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="monthly-cost">ج.م 672</div>
+                            <div class="stat-label">Monthly Average</div>
+                        </div>
+                        <div class="stat-card">
+                            <div class="stat-number" id="yearly-projection">ج.م 8,064</div>
+                            <div class="stat-label">Yearly Projection</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Environmental Impact -->
+                <div class="stats-section">
+                    <h3>🌱 Environmental Impact</h3>
+                    <div class="impact-grid">
+                        <div class="impact-card">
+                            <div class="impact-icon">💧</div>
+                            <div class="impact-content">
+                                <div class="impact-number" id="bottles-saved">4,800</div>
+                                <div class="impact-label">Plastic Bottles Saved</div>
+                            </div>
+                        </div>
+                        <div class="impact-card">
+                            <div class="impact-icon">🌍</div>
+                            <div class="impact-content">
+                                <div class="impact-number" id="co2-saved">96 lbs</div>
+                                <div class="impact-label">CO₂ Reduced</div>
+                            </div>
+                        </div>
+                        <div class="impact-card">
+                            <div class="impact-icon">♻️</div>
+                            <div class="impact-content">
+                                <div class="impact-number" id="waste-reduced">19 lbs</div>
+                                <div class="impact-label">Plastic Waste Reduced</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Filter Performance -->
+                <div class="stats-section">
+                    <h3>📈 Filter Performance</h3>
+                    <div class="performance-list" id="performance-list">
+                        <!-- Performance items will be rendered here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Settings Tab -->
+            <div id="settings-tab" class="tab-content">
+                <div class="section-header">
+                    <h2>Settings</h2>
+                </div>
+
+                <div class="settings-section">
+                    <h3>🔔 Notification Defaults</h3>
+                    <div class="form-group">
+                        <label for="default-buy-reminder">Default Buy Reminder</label>
+                        <select id="default-buy-reminder" class="form-control">
+                            <option value="7">1 week before</option>
+                            <option value="14" selected>2 weeks before</option>
+                            <option value="21">3 weeks before</option>
+                            <option value="30">1 month before</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="default-replace-reminder">Default Replace Reminder</label>
+                        <select id="default-replace-reminder" class="form-control">
+                            <option value="1">1 day before</option>
+                            <option value="3">3 days before</option>
+                            <option value="7" selected>1 week before</option>
+                            <option value="14">2 weeks before</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>🎨 Appearance</h3>
+                    <div class="form-group">
+                        <label for="currency-select">Currency</label>
+                        <select id="currency-select" class="form-control">
+                            <option value="USD">USD ($)</option>
+                            <option value="EUR">EUR (€)</option>
+                            <option value="GBP">GBP (£)</option>
+                            <option value="CAD">CAD ($)</option>
+                            <option value="EGP" selected>EGP (ج.م)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="settings-section">
+                    <h3>📱 Data Management</h3>
+                    <div class="settings-actions">
+                        <button id="export-data" class="btn btn-primary">
+                            <span>📤</span> Export All Data
+                        </button>
+                        <button id="import-data" class="btn btn-secondary">
+                            <span>📥</span> Import Data
+                        </button>
+                        <input type="file" id="import-file" accept=".json" style="display: none;">
+                        <button id="reset-data" class="btn btn-danger">
+                            <span>🗑️</span> Reset All Data
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+        </div>
+    </main>
+
+    <!-- Filter Modal with Advanced Notifications -->
+    <div id="filter-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Add Filter</h2>
+                <button class="modal-close" id="modal-close-filter">&times;</button>
+            </div>
+            <form id="filter-form" class="modal-body">
+                <div class="form-group">
+                    <label for="filter-name">Filter Name *</label>
+                    <input type="text" id="filter-name" required>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="filter-location">Location *</label>
+                        <input type="text" id="filter-location" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-stage">Stage</label>
+                        <input type="text" id="filter-stage" placeholder="e.g., Stage 1">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="filter-type">Type *</label>
+                        <select id="filter-type" required>
+                            <option value="">Select Type</option>
+                            <option value="Sediment">Sediment</option>
+                            <option value="Carbon">Carbon</option>
+                            <option value="Carbon Block">Carbon Block</option>
+                            <option value="RO Membrane">RO Membrane</option>
+                            <option value="Post Carbon">Post Carbon</option>
+                            <option value="Mineral">Mineral</option>
+                            <option value="UV Lamp">UV Lamp</option>
+                            <option value="Whole House">Whole House</option>
+                            <option value="Pitcher">Pitcher</option>
+                            <option value="Faucet Mount">Faucet Mount</option>
+                            <option value="Shower">Shower</option>
+                            <option value="Refrigerator">Refrigerator</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-interval">Replace Every (months) *</label>
+                        <select id="filter-interval" required>
+                            <option value="3">3 months</option>
+                            <option value="6">6 months</option>
+                            <option value="9">9 months</option>
+                            <option value="12">12 months</option>
+                            <option value="18">18 months</option>
+                            <option value="24">24 months</option>
+                            <option value="36">36 months</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="filter-brand">Brand</label>
+                        <input type="text" id="filter-brand">
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-model">Model</label>
+                        <input type="text" id="filter-model">
+                    </div>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label for="filter-install-date">Install Date *</label>
+                        <input type="date" id="filter-install-date" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="filter-cost">Cost (EGP)</label>
+                        <input type="number" id="filter-cost" min="0" step="0.01">
+                    </div>
+                </div>
+
+                <!-- Advanced Notification Settings -->
+                <div class="notification-settings">
+                    <h4>🔔 Advanced Notification Settings</h4>
                     
-                    this.saveData();
-                    this.saveHistory();
-                    this.updateStats();
-                    this.renderFilters();
+                    <!-- Buy Reminders -->
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="buy-reminder-enabled" checked>
+                            <span>Enable Buy Reminders</span>
+                        </label>
+                    </div>
                     
-                    alert('✅ Complete data imported successfully with all notification settings!');
-                    console.log('📥 Complete data imported');
-                }
-            } catch (error) {
-                alert('❌ Invalid file format. Please select a valid AquaTracker backup file.');
-                console.error('Import error:', error);
-            }
-        };
-        reader.readAsText(file);
-        
-        // Reset file input
-        event.target.value = '';
-    }
+                    <div class="buy-reminder-settings" id="buy-reminder-settings">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="buy-reminder-timing">When to remind</label>
+                                <select id="buy-reminder-timing">
+                                    <option value="1">1 day before</option>
+                                    <option value="3">3 days before</option>
+                                    <option value="7">1 week before</option>
+                                    <option value="14" selected>2 weeks before</option>
+                                    <option value="21">3 weeks before</option>
+                                    <option value="30">1 month before</option>
+                                    <option value="60">2 months before</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="buy-reminder-frequency">Repeat frequency</label>
+                                <select id="buy-reminder-frequency">
+                                    <option value="once">Once only</option>
+                                    <option value="daily">Daily</option>
+                                    <option value="every-3-days">Every 3 days</option>
+                                    <option value="weekly" selected>Weekly</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="buy-reminder-time">Time of day</label>
+                                <input type="time" id="buy-reminder-time" value="09:00">
+                            </div>
+                            <div class="form-group">
+                                <label for="buy-stop-days">Stop reminding after</label>
+                                <select id="buy-stop-days">
+                                    <option value="0">Never stop</option>
+                                    <option value="3">3 days</option>
+                                    <option value="7" selected>1 week</option>
+                                    <option value="14">2 weeks</option>
+                                    <option value="30">1 month</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
 
-    confirmResetData() {
-        if (confirm('⚠️ This will delete all filters, history, notification settings, and preferences. This cannot be undone. Are you sure?')) {
-            if (confirm('🚨 Are you absolutely sure? This will permanently delete everything including all advanced notification configurations.')) {
-                localStorage.clear();
-                location.reload();
-            }
-        }
-    }
+                    <!-- Replace Reminders -->
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="replace-reminder-enabled" checked>
+                            <span>Enable Replace Reminders</span>
+                        </label>
+                    </div>
+                    
+                    <div class="replace-reminder-settings" id="replace-reminder-settings">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="replace-reminder-timing">When to remind</label>
+                                <select id="replace-reminder-timing">
+                                    <option value="0">On due date</option>
+                                    <option value="1" selected>1 day before</option>
+                                    <option value="3">3 days before</option>
+                                    <option value="7">1 week before</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="replace-reminder-frequency">Repeat frequency</label>
+                                <select id="replace-reminder-frequency">
+                                    <option value="once">Once only</option>
+                                    <option value="daily" selected>Daily</option>
+                                    <option value="twice-daily">Twice daily (All day)</option>
+                                    <option value="every-2-hours">Every 2 hours</option>
+                                    <option value="every-hour">Every hour</option>
+                                    <option value="every-30-min">Every 30 minutes</option>
+                                    <option value="every-15-min">Every 15 minutes</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="replace-reminder-time">Time of day</label>
+                                <input type="time" id="replace-reminder-time" value="10:00">
+                            </div>
+                            <div class="form-group">
+                                <label for="overdue-escalation">When overdue</label>
+                                <select id="overdue-escalation">
+                                    <option value="none">No change</option>
+                                    <option value="every-hour">Every hour</option>
+                                    <option value="every-2-hours" selected>Every 2 hours</option>
+                                    <option value="every-6-hours">Every 6 hours</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
 
-    // PWA Features
-    initializePWA() {
-        // Register service worker
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('./sw.js')
-                .then(registration => {
-                    console.log('✅ SW registered:', registration);
-                })
-                .catch(error => {
-                    console.log('❌ SW registration failed:', error);
-                });
-        }
+                    <!-- Critical Overdue Alerts -->
+                    <div class="form-group">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="critical-reminder-enabled">
+                            <span>Enable Critical Overdue Alerts</span>
+                        </label>
+                    </div>
+                    
+                    <div class="critical-reminder-settings" id="critical-reminder-settings" style="display: none;">
+                        <div class="form-row">
+                            <div class="form-group">
+                                <label for="critical-threshold">Consider critical after</label>
+                                <select id="critical-threshold">
+                                    <option value="7">1 week overdue</option>
+                                    <option value="14" selected>2 weeks overdue</option>
+                                    <option value="21">3 weeks overdue</option>
+                                    <option value="30">1 month overdue</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="critical-frequency">Alert frequency</label>
+                                <select id="critical-frequency">
+                                    <option value="every-15-min">Every 15 minutes</option>
+                                    <option value="every-30-min">Every 30 minutes</option>
+                                    <option value="hourly" selected>Every hour</option>
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-        // Handle install prompt
-        window.addEventListener('beforeinstallprompt', (e) => {
-            e.preventDefault();
-            this.installPromptEvent = e;
-            this.showInstallPrompt();
-        });
+                <div class="form-group">
+                    <label for="filter-notes">Notes</label>
+                    <textarea id="filter-notes" rows="3" placeholder="Additional notes about this filter..."></textarea>
+                </div>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="cancel-btn">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Save Filter</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
-        // Check notification permission status
-        const enabled = localStorage.getItem('notifications-enabled') === 'true';
-        this.updateNotificationIcon(enabled);
-    }
+    <!-- Confirm Modal -->
+    <div id="confirm-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Confirm Action</h2>
+                <button class="modal-close" id="modal-close-confirm">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p id="confirm-message">Are you sure?</p>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="confirm-cancel">Cancel</button>
+                    <button type="button" class="btn btn-danger" id="confirm-ok">Delete</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    showInstallPrompt() {
-        const prompt = document.getElementById('install-prompt');
-        if (prompt && this.installPromptEvent) {
-            prompt.style.display = 'flex';
-        }
-    }
+    <!-- Notification Permission Modal -->
+    <div id="notification-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>🔔 Enable Notifications</h2>
+                <button class="modal-close" id="modal-close-notification">&times;</button>
+            </div>
+            <div class="modal-body">
+                <p>Get reminded when your water filters need replacement!</p>
+                <ul>
+                    <li>• Buy reminders before filters expire</li>
+                    <li>• Replace reminders when due</li>
+                    <li>• Overdue alerts for immediate action</li>
+                    <li>• Custom timing and frequency for each filter</li>
+                </ul>
+                <div class="form-actions">
+                    <button type="button" class="btn btn-secondary" id="notification-cancel">Not Now</button>
+                    <button type="button" class="btn btn-primary" id="notification-enable">Enable Notifications</button>
+                </div>
+            </div>
+        </div>
+    </div>
 
-    dismissInstallPrompt() {
-        const prompt = document.getElementById('install-prompt');
-        if (prompt) {
-            prompt.style.display = 'none';
-        }
-    }
+    <!-- Install Prompt -->
+    <div id="install-prompt" class="install-banner" style="display: none;">
+        <div class="install-content">
+            <span>📱 Install AquaTracker for offline access and notifications</span>
+            <div class="install-actions">
+                <button id="install-btn" class="btn btn-primary btn-sm">Install</button>
+                <button id="install-dismiss" class="btn btn-secondary btn-sm">Later</button>
+            </div>
+        </div>
+    </div>
 
-    installPWA() {
-        if (this.installPromptEvent) {
-            this.installPromptEvent.prompt();
-            this.installPromptEvent.userChoice.then((result) => {
-                if (result.outcome === 'accepted') {
-                    console.log('✅ PWA installed');
-                }
-                this.installPromptEvent = null;
-                this.dismissInstallPrompt();
-            });
-        }
-    }
-}
-
-// Initialize the complete app when DOM is loaded
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 DOM loaded, initializing complete AquaTracker...');
-    window.aquaTracker = new AquaTracker();
-    console.log('🎉 AquaTracker complete application initialized successfully!');
-});
+    <script src="./app.js"></script>
+</body>
+</html>
