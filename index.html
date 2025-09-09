@@ -33,13 +33,15 @@
                     <span class="notification-icon">🔕</span>
                 </button>
                 
-                <!-- WORKING Advanced Sliding Icon Toggle -->
+                <!-- RESTORED Working Toggle Animation -->
                 <div class="theme-toggle-container">
                     <label class="theme-switch">
                         <input type="checkbox" id="theme-toggle">
                         <span class="slider">
-                            <span class="icon sun">🌞</span>
-                            <span class="icon moon">🌙</span>
+                            <span class="slider-icon-container">
+                                <span class="slider-icon sun">🌞</span>
+                                <span class="slider-icon moon">🌙</span>
+                            </span>
                         </span>
                     </label>
                 </div>
@@ -162,7 +164,7 @@
                             <div class="stat-label">Monthly Average</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-number" id="yearly-projection">ج.م 8,064</div>
+                            <div class="stat-number" id="yearly-projection">ج.m 8,064</div>
                             <div class="stat-label">Yearly Projection</div>
                         </div>
                     </div>
@@ -239,6 +241,22 @@
                             <span>🗑️</span> Reset All Data
                         </button>
                     </div>
+                </div>
+
+                <!-- PWA Cache Control for Mobile Theme Fix -->
+                <div class="settings-section">
+                    <h3>🔄 App Updates</h3>
+                    <div class="settings-actions">
+                        <button id="clear-cache-btn" class="btn btn-outline">
+                            <span>🗂️</span> Clear Cache & Refresh
+                        </button>
+                        <button id="check-updates-btn" class="btn btn-outline">
+                            <span>🔍</span> Check for Updates
+                        </button>
+                    </div>
+                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.5rem;">
+                        Use "Clear Cache" if theme switching doesn't work on mobile PWA
+                    </p>
                 </div>
             </div>
             
