@@ -1,35 +1,126 @@
-// AquaTracker - Complete Working App with Fixed Theme System
-console.log('🌊 AquaTracker: Starting complete application...');
+// AquaTracker - Complete Working App with ROBUST Theme Override System
+console.log('🌊 AquaTracker: Starting with bulletproof theme system...');
 
-// THEME SYSTEM - WORKS 100%
-const THEME_KEY = 'aquatracker-theme';
-
-function getInitialTheme() {
-    const stored = localStorage.getItem(THEME_KEY);
-    if (stored) return stored;
-    return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-}
-
-function applyTheme(theme) {
-    console.log('🎨 Applying theme:', theme);
-    document.documentElement.setAttribute('data-theme', theme);
-    localStorage.setItem(THEME_KEY, theme);
-    
-    // Update toggle state
-    const toggle = document.getElementById('theme-toggle');
-    if (toggle) {
-        toggle.checked = (theme === 'dark');
+class ThemeController {
+    constructor() {
+        this.STORAGE_KEY = 'aquatracker-theme-override';
+        this.currentTheme = null;
+        this.isSystemOverride = false;
     }
-    
-    console.log('🎨 Theme applied successfully:', theme);
-}
 
-function toggleTheme() {
-    console.log('🎨 Toggle theme triggered');
-    const current = document.documentElement.getAttribute('data-theme') || 'light';
-    const next = current === 'dark' ? 'light' : 'dark';
-    console.log('🎨 Switching from', current, 'to', next);
-    applyTheme(next);
+    init() {
+        console.log('🎨 ThemeController: Initializing theme system...');
+        
+        // STEP 1: Get user's saved preference or default to light
+        const savedTheme = localStorage.getItem(this.STORAGE_KEY);
+        const initialTheme = savedTheme || 'light';
+        
+        console.log('🎨 Saved theme preference:', savedTheme);
+        console.log('🎨 Initial theme will be:', initialTheme);
+        
+        // STEP 2: Force apply theme immediately (before any system theme can interfere)
+        this.forceApplyTheme(initialTheme);
+        
+        // STEP 3: Bind toggle event
+        this.bindToggleEvent();
+        
+        // STEP 4: Prevent system theme changes
+        this.disableSystemThemeSync();
+        
+        console.log('✅ ThemeController: Initialization complete');
+    }
+
+    forceApplyTheme(theme) {
+        console.log('🎨 FORCE applying theme:', theme);
+        
+        // Set data-theme attribute with maximum specificity
+        document.documentElement.setAttribute('data-theme', theme);
+        document.body.setAttribute('data-theme', theme);
+        
+        // Force CSS custom properties (backup method)
+        const root = document.documentElement;
+        if (theme === 'dark') {
+            root.style.setProperty('--text-primary', '#f9fafb', 'important');
+            root.style.setProperty('--text-secondary', '#d1d5db', 'important');
+            root.style.setProperty('--text-muted', '#9ca3af', 'important');
+            root.style.setProperty('--bg-primary', '#1f2937', 'important');
+            root.style.setProperty('--bg-secondary', '#111827', 'important');
+            root.style.setProperty('--bg-tertiary', '#374151', 'important');
+            root.style.setProperty('--border-color', '#374151', 'important');
+            root.style.setProperty('--border-light', '#4b5563', 'important');
+        } else {
+            root.style.setProperty('--text-primary', '#1f2937', 'important');
+            root.style.setProperty('--text-secondary', '#6b7280', 'important');
+            root.style.setProperty('--text-muted', '#9ca3af', 'important');
+            root.style.setProperty('--bg-primary', '#ffffff', 'important');
+            root.style.setProperty('--bg-secondary', '#f9fafb', 'important');
+            root.style.setProperty('--bg-tertiary', '#f3f4f6', 'important');
+            root.style.setProperty('--border-color', '#e5e7eb', 'important');
+            root.style.setProperty('--border-light', '#f3f4f6', 'important');
+        }
+        
+        // Save preference
+        localStorage.setItem(this.STORAGE_KEY, theme);
+        this.currentTheme = theme;
+        this.isSystemOverride = true;
+        
+        // Update toggle position
+        this.updateToggleState(theme);
+        
+        // Force reflow to apply changes immediately
+        document.body.offsetHeight;
+        
+        console.log('🎨 Theme FORCE applied successfully:', theme);
+        console.log('🎨 Document theme attribute:', document.documentElement.getAttribute('data-theme'));
+    }
+
+    updateToggleState(theme) {
+        const toggle = document.getElementById('theme-toggle');
+        if (toggle) {
+            toggle.checked = (theme === 'dark');
+            console.log('🎨 Toggle updated:', theme === 'dark' ? 'checked' : 'unchecked');
+        }
+    }
+
+    toggleTheme() {
+        console.log('🎨 Theme toggle triggered!');
+        const newTheme = this.currentTheme === 'light' ? 'dark' : 'light';
+        console.log('🎨 Switching from', this.currentTheme, 'to', newTheme);
+        this.forceApplyTheme(newTheme);
+    }
+
+    bindToggleEvent() {
+        const toggle = document.getElementById('theme-toggle');
+        if (toggle) {
+            // Remove any existing listeners
+            toggle.removeEventListener('change', this.handleToggleChange.bind(this));
+            
+            // Add new listener
+            toggle.addEventListener('change', this.handleToggleChange.bind(this));
+            console.log('✅ Theme toggle event bound');
+        } else {
+            console.error('❌ Theme toggle element not found');
+        }
+    }
+
+    handleToggleChange(event) {
+        console.log('🎨 Toggle change event:', event.target.checked);
+        this.toggleTheme();
+    }
+
+    disableSystemThemeSync() {
+        // Remove any existing system theme listeners
+        if (window.matchMedia) {
+            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+            
+            // Remove all listeners on this media query
+            if (mediaQuery.removeEventListener) {
+                mediaQuery.removeEventListener('change', () => {});
+            }
+            
+            console.log('🚫 System theme sync disabled');
+        }
+    }
 }
 
 class AquaTracker {
@@ -39,8 +130,9 @@ class AquaTracker {
         this.editingFilterId = null;
         this.currentTab = 'dashboard';
         this.installPromptEvent = null;
-        this.currency = 'EGP'; // Default to Egyptian Pound
+        this.currency = 'EGP';
         this.pendingDeleteId = null;
+        this.themeController = new ThemeController();
         
         console.log('AquaTracker: Initializing complete application...');
         this.init();
@@ -48,6 +140,9 @@ class AquaTracker {
 
     init() {
         try {
+            // Initialize theme system FIRST
+            this.themeController.init();
+            
             this.loadInitialData();
             this.bindEvents();
             this.updateStats();
@@ -83,7 +178,7 @@ class AquaTracker {
                     installDate: '2024-03-15',
                     replacementInterval: 6,
                     nextDueDate: '2024-09-15',
-                    cost: 240, // EGP pricing
+                    cost: 240,
                     notes: 'First stage - removes sediment, dirt, and rust particles',
                     isActive: true,
                     notificationSettings: {
@@ -328,7 +423,6 @@ class AquaTracker {
             this.saveData();
         }
 
-        // Load history with EGP values
         if (storedHistory) {
             this.history = JSON.parse(storedHistory);
         } else {
@@ -343,7 +437,6 @@ class AquaTracker {
         const sampleHistory = [];
         const today = new Date();
         
-        // Generate realistic history with EGP pricing
         for (let i = 0; i < 16; i++) {
             const date = new Date(today);
             date.setDate(date.getDate() - (i * 30 + Math.random() * 20));
@@ -366,6 +459,8 @@ class AquaTracker {
 
     bindEvents() {
         console.log('🔗 Binding events...');
+        
+        // Theme toggle is handled by ThemeController
         
         // Notification toggle
         const notificationToggle = document.getElementById('notification-toggle');
@@ -461,7 +556,6 @@ class AquaTracker {
     }
 
     bindModalEvents() {
-        // Filter modal
         const filterForm = document.getElementById('filter-form');
         const cancelBtn = document.getElementById('cancel-btn');
         const closeButtons = document.querySelectorAll('.modal-close');
@@ -474,7 +568,6 @@ class AquaTracker {
             cancelBtn.addEventListener('click', () => this.closeModal('filter-modal'));
         }
 
-        // Close modal buttons
         closeButtons.forEach(btn => {
             btn.addEventListener('click', (e) => {
                 const modal = e.target.closest('.modal');
@@ -482,19 +575,16 @@ class AquaTracker {
             });
         });
 
-        // Confirm modal
         const confirmOk = document.getElementById('confirm-ok');
         const confirmCancel = document.getElementById('confirm-cancel');
         if (confirmOk) confirmOk.addEventListener('click', () => this.handleConfirmOk());
         if (confirmCancel) confirmCancel.addEventListener('click', () => this.closeModal('confirm-modal'));
 
-        // Notification modal
         const notificationEnable = document.getElementById('notification-enable');
         const notificationCancel = document.getElementById('notification-cancel');
         if (notificationEnable) notificationEnable.addEventListener('click', () => this.enableNotifications());
         if (notificationCancel) notificationCancel.addEventListener('click', () => this.closeModal('notification-modal'));
 
-        // Close modal when clicking outside
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal')) {
                 this.closeModal(e.target.id);
@@ -517,7 +607,6 @@ class AquaTracker {
             select.value = currency;
         }
         
-        // Update all displayed values
         this.updateStats();
         this.renderFilters();
         if (this.currentTab === 'statistics') {
@@ -603,14 +692,12 @@ class AquaTracker {
     switchTab(tabName) {
         console.log(`📑 Switching to tab: ${tabName}`);
         
-        // Update tab buttons
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.remove('active');
         });
         const activeTab = document.querySelector(`[data-tab="${tabName}"]`);
         if (activeTab) activeTab.classList.add('active');
 
-        // Update tab content
         document.querySelectorAll('.tab-content').forEach(content => {
             content.classList.remove('active');
         });
@@ -619,7 +706,6 @@ class AquaTracker {
 
         this.currentTab = tabName;
 
-        // Load content for specific tabs
         if (tabName === 'history') {
             this.renderHistory();
         } else if (tabName === 'statistics') {
@@ -656,7 +742,6 @@ class AquaTracker {
 
         grid.innerHTML = filteredFilters.map(filter => this.createFilterCard(filter)).join('');
         
-        // Bind filter card events
         grid.querySelectorAll('.filter-card').forEach(card => {
             const filterId = card.dataset.filterId;
             
@@ -847,7 +932,6 @@ class AquaTracker {
         const nextDue = new Date(today);
         nextDue.setMonth(nextDue.getMonth() + filter.replacementInterval);
 
-        // Add to history
         this.history.unshift({
             id: 'history-' + Date.now(),
             filterId: filter.id,
@@ -866,7 +950,6 @@ class AquaTracker {
         this.updateStats();
         this.renderFilters();
 
-        // Show success message
         alert(`✅ ${filter.name} marked as replaced! Next due: ${this.formatDate(filter.nextDueDate)}`);
         console.log(`🔄 Filter ${filter.name} marked as replaced`);
     }
@@ -876,10 +959,8 @@ class AquaTracker {
         const form = document.getElementById('filter-form');
         if (form) form.reset();
         
-        // Set default date to today
         document.getElementById('filter-install-date').value = new Date().toISOString().split('T')[0];
         
-        // Reset notification settings to defaults
         document.getElementById('buy-reminder-enabled').checked = true;
         document.getElementById('replace-reminder-enabled').checked = true;
         document.getElementById('critical-reminder-enabled').checked = false;
@@ -901,10 +982,8 @@ class AquaTracker {
         document.getElementById('filter-cost').value = filter.cost || '';
         document.getElementById('filter-notes').value = filter.notes || '';
 
-        // Populate notification settings
         const settings = filter.notificationSettings || {};
         
-        // Buy reminder settings
         if (settings.buyReminder) {
             document.getElementById('buy-reminder-enabled').checked = settings.buyReminder.enabled;
             document.getElementById('buy-reminder-timing').value = settings.buyReminder.timing;
@@ -914,7 +993,6 @@ class AquaTracker {
             document.getElementById('buy-reminder-settings').style.display = settings.buyReminder.enabled ? 'block' : 'none';
         }
         
-        // Replace reminder settings
         if (settings.replaceReminder) {
             document.getElementById('replace-reminder-enabled').checked = settings.replaceReminder.enabled;
             document.getElementById('replace-reminder-timing').value = settings.replaceReminder.timing;
@@ -924,7 +1002,6 @@ class AquaTracker {
             document.getElementById('replace-reminder-settings').style.display = settings.replaceReminder.enabled ? 'block' : 'none';
         }
         
-        // Critical reminder settings
         if (settings.criticalReminder) {
             document.getElementById('critical-reminder-enabled').checked = settings.criticalReminder.enabled;
             document.getElementById('critical-threshold').value = settings.criticalReminder.threshold;
@@ -971,21 +1048,18 @@ class AquaTracker {
             }
         };
 
-        // Calculate next due date
         const installDate = new Date(filterData.installDate);
         const nextDue = new Date(installDate);
         nextDue.setMonth(nextDue.getMonth() + filterData.replacementInterval);
         filterData.nextDueDate = nextDue.toISOString().split('T')[0];
 
         if (this.editingFilterId) {
-            // Update existing filter
             const index = this.filters.findIndex(f => f.id === this.editingFilterId);
             if (index !== -1) {
                 this.filters[index] = { ...this.filters[index], ...filterData };
                 console.log(`✏️ Filter updated: ${filterData.name}`);
             }
         } else {
-            // Add new filter
             filterData.id = 'filter-' + Date.now();
             this.filters.push(filterData);
             console.log(`➕ New filter added: ${filterData.name}`);
@@ -1081,11 +1155,9 @@ class AquaTracker {
     }
 
     updateStatistics() {
-        // Calculate real statistics from actual data
         const totalCost = this.history.reduce((sum, item) => sum + (item.cost || 0), 0);
         const avgCost = this.history.length > 0 ? totalCost / this.history.length : 0;
         
-        // Calculate monthly average based on history timespan
         const oldestDate = this.history.length > 0 ? 
             new Date(Math.min(...this.history.map(h => new Date(h.date)))) : 
             new Date();
@@ -1098,11 +1170,10 @@ class AquaTracker {
         document.getElementById('monthly-cost').textContent = this.formatCurrency(monthlyCost);
         document.getElementById('yearly-projection').textContent = this.formatCurrency(yearlyProjection);
 
-        // Environmental impact (estimated)
         const totalReplacements = this.history.length;
-        const bottlesSaved = totalReplacements * 600; // Conservative estimate
-        const co2Saved = Math.round(bottlesSaved * 0.16); // lbs of CO2 per bottle
-        const wasteReduced = Math.round(bottlesSaved * 0.032); // lbs of plastic per bottle
+        const bottlesSaved = totalReplacements * 600;
+        const co2Saved = Math.round(bottlesSaved * 0.16);
+        const wasteReduced = Math.round(bottlesSaved * 0.032);
 
         document.getElementById('bottles-saved').textContent = bottlesSaved.toLocaleString();
         document.getElementById('co2-saved').textContent = `${co2Saved} lbs`;
@@ -1206,7 +1277,7 @@ class AquaTracker {
             filters: this.filters,
             history: this.history,
             settings: {
-                theme: document.documentElement.getAttribute('data-theme'),
+                theme: this.themeController.currentTheme,
                 notificationsEnabled: localStorage.getItem('notifications-enabled'),
                 currency: this.currency
             },
@@ -1239,7 +1310,7 @@ class AquaTracker {
                     if (data.history) this.history = data.history;
                     if (data.settings) {
                         if (data.settings.theme) {
-                            applyTheme(data.settings.theme);
+                            this.themeController.forceApplyTheme(data.settings.theme);
                         }
                         if (data.settings.notificationsEnabled) {
                             localStorage.setItem('notifications-enabled', data.settings.notificationsEnabled);
@@ -1264,7 +1335,6 @@ class AquaTracker {
         };
         reader.readAsText(file);
         
-        // Reset file input
         event.target.value = '';
     }
 
@@ -1279,7 +1349,6 @@ class AquaTracker {
 
     // PWA Features
     initializePWA() {
-        // Register service worker
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
                 .then(registration => {
@@ -1290,14 +1359,12 @@ class AquaTracker {
                 });
         }
 
-        // Handle install prompt
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             this.installPromptEvent = e;
             this.showInstallPrompt();
         });
 
-        // Check notification permission status
         const enabled = localStorage.getItem('notifications-enabled') === 'true';
         this.updateNotificationIcon(enabled);
     }
@@ -1333,18 +1400,6 @@ class AquaTracker {
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
     console.log('🚀 DOM loaded, initializing AquaTracker...');
-    
-    // Apply initial theme
-    applyTheme(getInitialTheme());
-    
-    // Bind theme toggle
-    const themeToggle = document.getElementById('theme-toggle');
-    if (themeToggle) {
-        themeToggle.addEventListener('change', toggleTheme);
-        console.log('✅ Theme toggle bound successfully');
-    }
-    
-    // Initialize app
     window.aquaTracker = new AquaTracker();
     console.log('🎉 AquaTracker initialized successfully!');
 });
