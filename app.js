@@ -1,4 +1,4 @@
-// AquaTracker - Complete Working App with ROBUST Theme Override System
+// AquaTracker - Complete App with Mobile PWA Theme Fix
 console.log('🌊 AquaTracker: Starting with bulletproof theme system...');
 
 class ThemeController {
@@ -11,20 +11,14 @@ class ThemeController {
     init() {
         console.log('🎨 ThemeController: Initializing theme system...');
         
-        // STEP 1: Get user's saved preference or default to light
         const savedTheme = localStorage.getItem(this.STORAGE_KEY);
         const initialTheme = savedTheme || 'light';
         
         console.log('🎨 Saved theme preference:', savedTheme);
         console.log('🎨 Initial theme will be:', initialTheme);
         
-        // STEP 2: Force apply theme immediately (before any system theme can interfere)
         this.forceApplyTheme(initialTheme);
-        
-        // STEP 3: Bind toggle event
         this.bindToggleEvent();
-        
-        // STEP 4: Prevent system theme changes
         this.disableSystemThemeSync();
         
         console.log('✅ ThemeController: Initialization complete');
@@ -33,11 +27,9 @@ class ThemeController {
     forceApplyTheme(theme) {
         console.log('🎨 FORCE applying theme:', theme);
         
-        // Set data-theme attribute with maximum specificity
         document.documentElement.setAttribute('data-theme', theme);
         document.body.setAttribute('data-theme', theme);
         
-        // Force CSS custom properties (backup method)
         const root = document.documentElement;
         if (theme === 'dark') {
             root.style.setProperty('--text-primary', '#f9fafb', 'important');
@@ -59,15 +51,11 @@ class ThemeController {
             root.style.setProperty('--border-light', '#f3f4f6', 'important');
         }
         
-        // Save preference
         localStorage.setItem(this.STORAGE_KEY, theme);
         this.currentTheme = theme;
         this.isSystemOverride = true;
         
-        // Update toggle position
         this.updateToggleState(theme);
-        
-        // Force reflow to apply changes immediately
         document.body.offsetHeight;
         
         console.log('🎨 Theme FORCE applied successfully:', theme);
@@ -92,10 +80,7 @@ class ThemeController {
     bindToggleEvent() {
         const toggle = document.getElementById('theme-toggle');
         if (toggle) {
-            // Remove any existing listeners
             toggle.removeEventListener('change', this.handleToggleChange.bind(this));
-            
-            // Add new listener
             toggle.addEventListener('change', this.handleToggleChange.bind(this));
             console.log('✅ Theme toggle event bound');
         } else {
@@ -109,15 +94,11 @@ class ThemeController {
     }
 
     disableSystemThemeSync() {
-        // Remove any existing system theme listeners
         if (window.matchMedia) {
             const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-            
-            // Remove all listeners on this media query
             if (mediaQuery.removeEventListener) {
                 mediaQuery.removeEventListener('change', () => {});
             }
-            
             console.log('🚫 System theme sync disabled');
         }
     }
@@ -140,7 +121,6 @@ class AquaTracker {
 
     init() {
         try {
-            // Initialize theme system FIRST
             this.themeController.init();
             
             this.loadInitialData();
@@ -165,7 +145,6 @@ class AquaTracker {
         if (storedFilters) {
             this.filters = JSON.parse(storedFilters);
         } else {
-            // Pre-install 7-stage RO system with EGP pricing and advanced notifications
             this.filters = [
                 {
                     id: 'stage-1',
@@ -460,8 +439,6 @@ class AquaTracker {
     bindEvents() {
         console.log('🔗 Binding events...');
         
-        // Theme toggle is handled by ThemeController
-        
         // Notification toggle
         const notificationToggle = document.getElementById('notification-toggle');
         if (notificationToggle) {
@@ -474,20 +451,17 @@ class AquaTracker {
         tabButtons.forEach(btn => {
             btn.addEventListener('click', () => this.switchTab(btn.dataset.tab));
         });
-        console.log(`✅ Bound ${tabButtons.length} tab buttons`);
 
         // Add filter button
         const addBtn = document.getElementById('add-filter-btn');
         if (addBtn) {
             addBtn.addEventListener('click', () => this.showAddFilterModal());
-            console.log('✅ Add filter button bound');
         }
 
         // Search
         const searchInput = document.getElementById('search-input');
         if (searchInput) {
             searchInput.addEventListener('input', (e) => this.searchFilters(e.target.value));
-            console.log('✅ Search input bound');
         }
 
         // History controls
@@ -530,6 +504,18 @@ class AquaTracker {
             currencySelect.addEventListener('change', (e) => this.setCurrency(e.target.value));
         }
 
+        // Mobile PWA Cache Controls
+        const clearCacheBtn = document.getElementById('clear-cache-btn');
+        const checkUpdatesBtn = document.getElementById('check-updates-btn');
+        
+        if (clearCacheBtn) {
+            clearCacheBtn.addEventListener('click', () => this.clearCacheAndRefresh());
+        }
+        
+        if (checkUpdatesBtn) {
+            checkUpdatesBtn.addEventListener('click', () => this.checkForUpdates());
+        }
+
         // Advanced notification toggles
         const buyReminderEnabled = document.getElementById('buy-reminder-enabled');
         const replaceReminderEnabled = document.getElementById('replace-reminder-enabled');
@@ -545,14 +531,65 @@ class AquaTracker {
             criticalReminderEnabled.addEventListener('change', () => this.toggleNotificationSection('critical-reminder-settings', criticalReminderEnabled.checked));
         }
 
-        // Modal events
         this.bindModalEvents();
 
-        // Install prompt
         const installBtn = document.getElementById('install-btn');
         const installDismiss = document.getElementById('install-dismiss');
         if (installBtn) installBtn.addEventListener('click', () => this.installPWA());
         if (installDismiss) installDismiss.addEventListener('click', () => this.dismissInstallPrompt());
+    }
+
+    // Mobile PWA Cache Management
+    async clearCacheAndRefresh() {
+        console.log('🗂️ Clearing PWA cache...');
+        
+        try {
+            if ('caches' in window) {
+                const cacheNames = await caches.keys();
+                
+                for (const cacheName of cacheNames) {
+                    await caches.delete(cacheName);
+                    console.log('🗑️ Deleted cache:', cacheName);
+                }
+                
+                // Also clear localStorage theme to reset completely
+                localStorage.removeItem(this.themeController.STORAGE_KEY);
+                
+                alert('✅ Cache cleared! The app will now reload with fresh files.');
+                
+                // Force reload
+                window.location.reload(true);
+            } else {
+                alert('Cache API not available in this browser.');
+            }
+        } catch (error) {
+            console.error('❌ Cache clearing error:', error);
+            alert('❌ Error clearing cache. Try closing and reopening the app.');
+        }
+    }
+
+    async checkForUpdates() {
+        console.log('🔍 Checking for updates...');
+        
+        try {
+            if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
+                // Force service worker to check for updates
+                navigator.serviceWorker.controller.postMessage({ action: 'skipWaiting' });
+                
+                const registration = await navigator.serviceWorker.getRegistration();
+                if (registration) {
+                    await registration.update();
+                    console.log('🔄 Service worker updated');
+                }
+                
+                alert('🔍 Update check complete! If theme switching still doesn\'t work, try "Clear Cache & Refresh".');
+            } else {
+                alert('Service worker not available. Try refreshing the page.');
+            }
+        } catch (error) {
+            console.error('❌ Update check error:', error);
+            alert('❌ Error checking for updates.');
+        }
     }
 
     bindModalEvents() {
