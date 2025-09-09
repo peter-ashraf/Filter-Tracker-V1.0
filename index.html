@@ -33,13 +33,16 @@
                     <span class="notification-icon">🔕</span>
                 </button>
                 
-                <!-- WORKING Sliding Toggle -->
-                <label class="theme-switch">
-                    <input type="checkbox" id="theme-toggle">
-                    <span class="theme-slider">
-                        <span class="theme-icon"></span>
-                    </span>
-                </label>
+                <!-- WORKING Advanced Sliding Icon Toggle -->
+                <div class="theme-toggle-container">
+                    <label class="theme-switch">
+                        <input type="checkbox" id="theme-toggle">
+                        <span class="slider">
+                            <span class="icon sun">🌞</span>
+                            <span class="icon moon">🌙</span>
+                        </span>
+                    </label>
+                </div>
             </div>
         </div>
     </header>
@@ -81,15 +84,15 @@
                         <div class="stat-label">Total Filters</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number overdue" id="overdue-filters">3</div>
+                        <div class="stat-number overdue" id="overdue-filters">6</div>
                         <div class="stat-label">Overdue</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number due-soon" id="due-soon-filters">1</div>
+                        <div class="stat-number due-soon" id="due-soon-filters">0</div>
                         <div class="stat-label">Due Soon</div>
                     </div>
                     <div class="stat-card">
-                        <div class="stat-number good" id="good-filters">3</div>
+                        <div class="stat-number good" id="good-filters">1</div>
                         <div class="stat-label">Good</div>
                     </div>
                 </div>
@@ -124,7 +127,7 @@
                 
                 <div class="history-filters">
                     <select id="history-filter" class="form-control">
-                        <option value="all">All Filters</option>
+                        <option value="all">All History</option>
                         <option value="30">Last 30 Days</option>
                         <option value="90">Last 90 Days</option>
                         <option value="365">Last Year</option>
@@ -206,28 +209,6 @@
             <div id="settings-tab" class="tab-content">
                 <div class="section-header">
                     <h2>Settings</h2>
-                </div>
-
-                <div class="settings-section">
-                    <h3>🔔 Notification Defaults</h3>
-                    <div class="form-group">
-                        <label for="default-buy-reminder">Default Buy Reminder</label>
-                        <select id="default-buy-reminder" class="form-control">
-                            <option value="7">1 week before</option>
-                            <option value="14" selected>2 weeks before</option>
-                            <option value="21">3 weeks before</option>
-                            <option value="30">1 month before</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="default-replace-reminder">Default Replace Reminder</label>
-                        <select id="default-replace-reminder" class="form-control">
-                            <option value="1">1 day before</option>
-                            <option value="3">3 days before</option>
-                            <option value="7" selected>1 week before</option>
-                            <option value="14">2 weeks before</option>
-                        </select>
-                    </div>
                 </div>
 
                 <div class="settings-section">
