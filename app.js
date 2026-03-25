@@ -63,7 +63,7 @@ class ThemeController {
     }
 
     updateToggleState(theme) {
-        const toggle = document.getElementById('theme-toggle');
+        const toggle = document.querySelector('.theme-switch__checkbox');
         if (toggle) {
             toggle.checked = (theme === 'dark');
             console.log('🎨 Toggle updated:', theme === 'dark' ? 'checked' : 'unchecked');
@@ -78,7 +78,7 @@ class ThemeController {
     }
 
     bindToggleEvent() {
-        const toggle = document.getElementById('theme-toggle');
+        const toggle = document.querySelector('.theme-switch__checkbox');
         if (toggle) {
             toggle.removeEventListener('change', this.handleToggleChange.bind(this));
             toggle.addEventListener('change', this.handleToggleChange.bind(this));
