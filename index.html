@@ -8,7 +8,7 @@
     <!-- PWA Meta Tags -->
     <meta name="description" content="Track your water filter replacements with smart notifications">
     <meta name="theme-color" content="#218085">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="AquaTracker">
     
@@ -25,12 +25,12 @@
     <header class="app-header">
         <div class="header-content">
             <div class="logo-section">
-                <div class="logo">💧</div>
+                <div class="logo">🔥</div>
                 <h1 class="app-title">AquaTracker</h1>
             </div>
             <div class="header-controls">
                 <button id="notification-toggle" class="icon-btn" title="Toggle Notifications">
-                    <span class="notification-icon">🔕</span>
+                    <span class="notification-icon"></span>
                 </button>
                 
                 <!-- From Uiverse.io by Galahhad --> 
@@ -566,6 +566,22 @@
                     <button type="button" class="btn btn-primary" id="notification-enable">Enable Notifications</button>
                     <button type="button" class="btn btn-outline" id="reset-permission" style="display: none;">Reset Permission</button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Generic Modal for replacing alerts -->
+    <div id="generic-modal" class="modal" style="display: none;">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="generic-modal-title">Notification</h2>
+                <button class="modal-close" id="generic-modal-close">&times;</button>
+            </div>
+            <div class="modal-body" id="generic-modal-body">
+                <!-- Content will be inserted here -->
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-primary" id="generic-modal-ok">OK</button>
             </div>
         </div>
     </div>

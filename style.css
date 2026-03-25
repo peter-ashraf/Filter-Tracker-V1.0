@@ -891,6 +891,18 @@ body {
   color: var(--text-primary) !important;
 }
 
+.notification-icon::before {
+  font-size: var(--font-size-xl);
+}
+
+.notification-icon:not(.enabled)::before {
+  content: "🔕";
+}
+
+.notification-icon.enabled::before {
+  content: "🔔";
+}
+
 .icon-btn:hover {
   background: var(--primary-color) !important;
   color: var(--color-btn-primary-text) !important;
@@ -1131,6 +1143,28 @@ body {
   -webkit-transform: translateY(-50%);
   -ms-transform: translateY(-50%);
   transform: translateY(-50%);
+}
+
+/* Generic Modal for Alerts */
+#generic-modal .modal-content {
+    max-width: 400px;
+    text-align: center;
+}
+
+#generic-modal .modal-actions {
+    justify-content: center;
+    margin-top: var(--space-16);
+}
+
+#generic-modal h2 {
+    color: var(--text-primary) !important;
+    margin-bottom: var(--space-16);
+}
+
+#generic-modal .modal-body {
+    color: var(--text-secondary) !important;
+    line-height: 1.6;
+    margin-bottom: var(--space-16);
 }
 
 /* Navigation Tabs */

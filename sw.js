@@ -18,7 +18,7 @@ self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then((cache) => {
-        console.log('Opened cache');
+        
         return cache.addAll(urlsToCache);
       })
       .then(() => {
@@ -37,7 +37,7 @@ self.addEventListener('activate', (event) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
-            console.log('Deleting old cache:', cacheName);
+            
             return caches.delete(cacheName);
           }
         })
@@ -47,7 +47,7 @@ self.addEventListener('activate', (event) => {
       return self.clients.claim();
     }).then(() => {
       // Start background notification checking after activation
-      console.log('🔔 Service worker activated, starting background checking...');
+      
       startBackgroundNotificationChecking();
     })
   );
@@ -86,15 +86,15 @@ self.addEventListener('fetch', (event) => {
 
 // Push notification event handler
 self.addEventListener('push', (event) => {
-  console.log('🔔 Push notification received:', event);
+  
   
   if (!event.data) {
-    console.log('Push event had no data');
+    
     return;
   }
 
   const options = event.data.json();
-  console.log('Push notification data:', options);
+  
 
   event.waitUntil(
     self.registration.showNotification(options.title, {
@@ -112,7 +112,7 @@ self.addEventListener('push', (event) => {
 
 // Notification click event handler
 self.addEventListener('notificationclick', (event) => {
-  console.log('🔔 Notification click received:', event);
+  
   
   event.notification.close();
   
@@ -146,7 +146,7 @@ self.addEventListener('notificationclick', (event) => {
 
 // Periodic sync for background tasks
 self.addEventListener('periodicsync', (event) => {
-  console.log('🔄 Periodic sync event:', event.tag);
+  
   
   if (event.tag === 'check-reminders') {
     event.waitUntil(checkAndScheduleNotifications());
@@ -160,12 +160,12 @@ self.addEventListener('periodicsync', (event) => {
 // Check and schedule notifications
 async function checkAndScheduleNotifications() {
   try {
-    console.log('🔔 Checking reminders...');
+    
     
     // Get all open clients
     const clients = await self.clients.matchAll();
     if (clients.length === 0) {
-      console.log('No open clients, skipping reminder check');
+      
       return;
     }
     
@@ -176,19 +176,19 @@ async function checkAndScheduleNotifications() {
     });
     
   } catch (error) {
-    console.error('Error checking reminders:', error);
+    
   }
 }
 
 // Perform daily backup
 async function performDailyBackup() {
   try {
-    console.log('💾 Performing daily backup...');
+    
     
     // Get all open clients
     const clients = await self.clients.matchAll();
     if (clients.length === 0) {
-      console.log('No open clients, skipping backup');
+      
       return;
     }
     
@@ -199,13 +199,13 @@ async function performDailyBackup() {
     });
     
   } catch (error) {
-    console.error('Error performing backup:', error);
+    
   }
 }
 
 // Message handler from main app
 self.addEventListener('message', (event) => {
-  console.log('📨 Message received in service worker:', event.data);
+  
   
   const { type, data } = event.data;
   
@@ -220,13 +220,13 @@ self.addEventListener('message', (event) => {
       registerPeriodicSync(data.tag, data.minInterval);
       break;
     default:
-      console.log('Unknown message type:', type);
+      
   }
 });
 
 // Start background notification checking
 function startBackgroundNotificationChecking() {
-  console.log('🔔 Starting background notification checking...');
+  
   
   // Clear any existing interval
   if (backgroundCheckInterval) {
@@ -246,7 +246,7 @@ function startBackgroundNotificationChecking() {
 
 // Check and send background notifications
 async function checkAndSendBackgroundNotifications() {
-  console.log('🔔 Checking for background notifications...');
+  
   
   try {
     // Get filters from localStorage (service worker can access this)
@@ -257,7 +257,7 @@ async function checkAndSendBackgroundNotifications() {
       await checkFilterForNotification(filter, today);
     }
   } catch (error) {
-    console.error('❌ Error checking background notifications:', error);
+    
   }
 }
 
@@ -266,10 +266,10 @@ function getFiltersFromStorage() {
   try {
     // Service worker can access localStorage directly
     const filters = JSON.parse(localStorage.getItem('filters') || '[]');
-    console.log('🔔 Found filters in localStorage:', filters.length);
+    
     return filters;
   } catch (error) {
-    console.log('Could not get filters from localStorage, using empty array');
+    
     return [];
   }
 }
@@ -332,13 +332,13 @@ async function checkFilterForNotification(filter, today) {
 
 // Send background notification
 async function sendBackgroundNotification(options) {
-  console.log('🔔 Sending background notification:', options);
+  
   
   try {
     // Check if notifications are enabled
     const notificationsEnabled = localStorage.getItem('notifications-enabled') === 'true';
     if (!notificationsEnabled) {
-      console.log('🔕 Notifications disabled, skipping');
+      
       return;
     }
     
@@ -352,15 +352,15 @@ async function sendBackgroundNotification(options) {
       silent: false
     });
     
-    console.log('✅ Background notification sent successfully');
+    
   } catch (error) {
-    console.error('❌ Error sending background notification:', error);
+    
   }
 }
 
 // Notification click handler
 self.addEventListener('notificationclick', (event) => {
-  console.log('🔔 Notification clicked:', event.notification);
+  
   
   const notification = event.notification;
   const notificationData = notification.data || {};
@@ -408,7 +408,7 @@ self.addEventListener('notificationclick', (event) => {
 
 // Notification close handler (optional tracking)
 self.addEventListener('notificationclose', (event) => {
-  console.log('🔔 Notification closed:', event.notification);
+  
   // Could track closed notifications here
 });
 
@@ -424,23 +424,23 @@ async function registerPeriodicSync(tag, minInterval) {
           await registration.periodicSync.register(tag, {
             minInterval: minInterval || 24 * 60 * 60 * 1000 // 24 hours
           });
-          console.log(`✅ Periodic sync registered for ${tag}`);
+          
           return;
         } else {
-          console.log('⚠️ Periodic background sync permission not granted');
+          
         }
       } catch (permError) {
-        console.log('⚠️ Could not check periodic sync permission');
+        
       }
     } else {
-      console.log('⚠️ Periodic Sync API not supported');
+      
     }
   } catch (error) {
-    console.error('Error registering periodic sync:', error);
+    
   }
   
   // Fallback to setTimeout for periodic checks
-  console.log('🔄 Using setTimeout fallback for periodic sync');
+  
   setInterval(() => {
     if (tag === 'daily-backup') {
       performDailyBackup();

@@ -1,5 +1,4 @@
 // AquaTracker - Complete App with Mobile PWA Theme Fix
-console.log('🌊 AquaTracker: Starting with bulletproof theme system...');
 
 class ThemeController {
     constructor() {
@@ -9,23 +8,16 @@ class ThemeController {
     }
 
     init() {
-        console.log('🎨 ThemeController: Initializing theme system...');
         
         const savedTheme = localStorage.getItem(this.STORAGE_KEY);
         const initialTheme = savedTheme || 'light';
         
-        console.log('🎨 Saved theme preference:', savedTheme);
-        console.log('🎨 Initial theme will be:', initialTheme);
-        
         this.forceApplyTheme(initialTheme);
         this.bindToggleEvent();
         this.disableSystemThemeSync();
-        
-        console.log('✅ ThemeController: Initialization complete');
     }
 
     forceApplyTheme(theme) {
-        console.log('🎨 FORCE applying theme:', theme);
         
         document.documentElement.setAttribute('data-theme', theme);
         document.body.setAttribute('data-theme', theme);
@@ -57,23 +49,26 @@ class ThemeController {
         
         this.updateToggleState(theme);
         document.body.offsetHeight;
-        
-        console.log('🎨 Theme FORCE applied successfully:', theme);
-        console.log('🎨 Document theme attribute:', document.documentElement.getAttribute('data-theme'));
     }
 
     updateToggleState(theme) {
         const toggle = document.querySelector('.theme-switch__checkbox');
         if (toggle) {
-            toggle.checked = (theme === 'dark');
-            console.log('🎨 Toggle updated:', theme === 'dark' ? 'checked' : 'unchecked');
+            // Only update if the toggle state doesn't match the theme
+            if (toggle.checked !== (theme === 'dark')) {
+                // Temporarily remove event listener to prevent recursive loop
+                toggle.removeEventListener('change', this.handleToggleChange.bind(this));
+                toggle.checked = (theme === 'dark');
+                // Re-add event listener
+                setTimeout(() => {
+                    toggle.addEventListener('change', this.handleToggleChange.bind(this));
+                }, 0);
+            }
         }
     }
 
     toggleTheme() {
-        console.log('🎨 Theme toggle triggered!');
         const newTheme = this.currentTheme === 'light' ? 'dark' : 'light';
-        console.log('🎨 Switching from', this.currentTheme, 'to', newTheme);
         this.forceApplyTheme(newTheme);
     }
 
@@ -82,24 +77,19 @@ class ThemeController {
         if (toggle) {
             toggle.removeEventListener('change', this.handleToggleChange.bind(this));
             toggle.addEventListener('change', this.handleToggleChange.bind(this));
-            console.log('✅ Theme toggle event bound');
         } else {
-            console.error('❌ Theme toggle element not found');
+            
         }
     }
 
     handleToggleChange(event) {
-        console.log('🎨 Toggle change event:', event.target.checked);
         this.toggleTheme();
     }
 
     disableSystemThemeSync() {
+        // Remove any system theme detection to prevent conflicts
         if (window.matchMedia) {
-            const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-            if (mediaQuery.removeEventListener) {
-                mediaQuery.removeEventListener('change', () => {});
-            }
-            console.log('🚫 System theme sync disabled');
+            window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', this.handleSystemThemeChange);
         }
     }
 }
@@ -114,10 +104,9 @@ class AquaTracker {
         this.currency = 'EGP';
         this.pendingDeleteId = null;
         this.themeController = new ThemeController();
-        this.pushNotificationManager = new PushNotificationManager();
+        this.pushNotificationManager = new PushNotificationManager(this);
         this.backupManager = new BackupManager(this);
         
-        console.log('AquaTracker: Initializing complete application...');
         this.init();
     }
 
@@ -137,15 +126,12 @@ class AquaTracker {
             this.pushNotificationManager.init();
             this.backupManager.init();
             
-            console.log('✅ AquaTracker: Complete application loaded successfully');
         } catch (error) {
-            console.error('❌ AquaTracker: Initialization error:', error);
+            
         }
     }
 
     loadInitialData() {
-        console.log('📊 Loading initial data with EGP currency...');
-        
         const storedFilters = localStorage.getItem('waterFilters');
         const storedHistory = localStorage.getItem('filterHistory');
         
@@ -416,7 +402,7 @@ class AquaTracker {
             this.saveHistory();
         }
         
-        console.log(`📊 Loaded ${this.filters.length} filters and ${this.history.length} history items with EGP pricing`);
+        
     }
 
     generateSampleHistory() {
@@ -444,13 +430,13 @@ class AquaTracker {
     }
 
     bindEvents() {
-        console.log('🔗 Binding events...');
+        
         
         // Notification toggle
         const notificationToggle = document.getElementById('notification-toggle');
         if (notificationToggle) {
             notificationToggle.addEventListener('click', () => this.toggleNotifications());
-            console.log('✅ Notification toggle bound');
+            
         }
 
         // Tab navigation
@@ -570,7 +556,7 @@ class AquaTracker {
 
     // Mobile PWA Cache Management
     async clearCacheAndRefresh() {
-        console.log('🗂️ Clearing PWA cache...');
+        
         
         try {
             if ('caches' in window) {
@@ -578,27 +564,27 @@ class AquaTracker {
                 
                 for (const cacheName of cacheNames) {
                     await caches.delete(cacheName);
-                    console.log('🗑️ Deleted cache:', cacheName);
+                    
                 }
                 
                 // Also clear localStorage theme to reset completely
                 localStorage.removeItem(this.themeController.STORAGE_KEY);
                 
-                alert('✅ Cache cleared! The app will now reload with fresh files.');
+                this.showNiceModal('✅ Cache Cleared', 'The app will now reload with fresh files.');
                 
                 // Force reload
                 window.location.reload(true);
             } else {
-                alert('Cache API not available in this browser.');
+                this.showNiceModal('❌ Cache Unavailable', 'Cache API not available in this browser.');
             }
         } catch (error) {
-            console.error('❌ Cache clearing error:', error);
-            alert('❌ Error clearing cache. Try closing and reopening the app.');
+            
+            this.showNiceModal('❌ Cache Error', 'Error clearing cache. Try closing and reopening the app.');
         }
     }
 
     async checkForUpdates() {
-        console.log('🔍 Checking for updates...');
+        
         
         try {
             if ('serviceWorker' in navigator && navigator.serviceWorker.controller) {
@@ -608,16 +594,16 @@ class AquaTracker {
                 const registration = await navigator.serviceWorker.getRegistration();
                 if (registration) {
                     await registration.update();
-                    console.log('🔄 Service worker updated');
+                    
                 }
                 
-                alert('🔍 Update check complete! If theme switching still doesn\'t work, try "Clear Cache & Refresh".');
+                this.showNiceModal('✅ Update Complete', 'Update check complete! If theme switching still doesn\'t work, try "Clear Cache & Refresh".');
             } else {
-                alert('Service worker not available. Try refreshing the page.');
+                this.showNiceModal('❌ Service Worker Error', 'Service worker not available. Try refreshing the page.');
             }
         } catch (error) {
-            console.error('❌ Update check error:', error);
-            alert('❌ Error checking for updates.');
+            
+            this.showNiceModal('❌ Update Error', 'Error checking for updates.');
         }
     }
 
@@ -650,14 +636,19 @@ class AquaTracker {
         const notificationCancel = document.getElementById('notification-cancel');
         const resetPermission = document.getElementById('reset-permission');
         
+        // Show reset button if permission is already granted
+        if (Notification.permission === 'granted') {
+            resetPermission.style.display = 'inline-block';
+        }
+        
         if (notificationEnable) {
-            console.log('🔔 Found notification enable button, binding event...');
+            
             notificationEnable.addEventListener('click', (e) => {
-                console.log('🔔 Notification enable button clicked!');
+                
                 this.enableNotifications();
             });
         } else {
-            console.error('❌ Notification enable button not found!');
+            
         }
         
         if (notificationCancel) {
@@ -668,11 +659,35 @@ class AquaTracker {
             resetPermission.addEventListener('click', () => this.resetNotificationPermission());
         }
 
+        // Generic modal events
+        const genericModalClose = document.getElementById('generic-modal-close');
+        const genericModalOk = document.getElementById('generic-modal-ok');
+        
+        if (genericModalClose) {
+            genericModalClose.addEventListener('click', () => this.closeModal('generic-modal'));
+        }
+        
+        if (genericModalOk) {
+            genericModalOk.addEventListener('click', () => this.closeModal('generic-modal'));
+        }
+
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal')) {
                 this.closeModal(e.target.id);
             }
         });
+    }
+
+    showNiceModal(title, message) {
+        const modal = document.getElementById('generic-modal');
+        const titleElement = document.getElementById('generic-modal-title');
+        const bodyElement = document.getElementById('generic-modal-body');
+        
+        if (modal && titleElement && bodyElement) {
+            titleElement.textContent = title;
+            bodyElement.innerHTML = `<p>${message}</p>`;
+            modal.style.display = 'flex';
+        }
     }
 
     // Currency Management
@@ -699,7 +714,7 @@ class AquaTracker {
             this.renderHistory();
         }
         
-        console.log(`💱 Currency set to: ${currency}`);
+        
     }
 
     formatCurrency(amount) {
@@ -731,28 +746,27 @@ class AquaTracker {
     }
 
     async enableNotifications() {
-        console.log('🔔 enableNotifications() called!');
         
         // Check current permission state first
         const currentPermission = Notification.permission;
-        console.log('🔔 Current permission state:', currentPermission);
+        
         
         if ('Notification' in window) {
             try {
                 if (currentPermission === 'default') {
-                    console.log('🔔 Requesting notification permission...');
+                    
                     // Request browser notification permission first
                     const permission = await Notification.requestPermission();
-                    console.log('🔔 Permission result:', permission);
+                    
                     
                     if (permission === 'granted') {
-                        console.log('🔔 Permission granted, setting up notifications...');
+                        
                         localStorage.setItem('notifications-enabled', 'true');
                         this.updateNotificationIcon(true);
                         this.closeModal('notification-modal');
                         
                         // Test notification immediately
-                        console.log('🔔 Sending test notification...');
+                        
                         new Notification('🔔 AquaTracker', {
                             body: 'Notifications enabled! You\'ll get reminders for your water filters.'
                         });
@@ -767,23 +781,47 @@ class AquaTracker {
                             }, 1000);
                             
                         } catch (pushError) {
-                            console.log('⚠️ Push notifications not available, using browser notifications only');
+                            
                         }
                     } else if (permission === 'denied') {
-                        console.log('🔔 Permission denied, showing reset option...');
+                        
                         this.showPermissionDeniedState();
                     }
+                } else if (currentPermission === 'granted') {
+                    
+                    localStorage.setItem('notifications-enabled', 'true');
+                    this.updateNotificationIcon(true);
+                    this.closeModal('notification-modal');
+                    
+                    // Test notification immediately
+                    
+                    new Notification('🔔 AquaTracker', {
+                            body: 'Notifications already enabled! You’ll get reminders for your water filters.'
+                        });
+                    
+                    // Try to enable push notifications
+                    try {
+                        await this.pushNotificationManager.subscribe();
+                        
+// ... (rest of the code remains the same)
+                        // Test reminder check
+                        setTimeout(() => {
+                            this.pushNotificationManager.checkAndScheduleReminders();
+                        }, 1000);
+                        
+                    } catch (pushError) {
+                        
+                    }
                 } else if (currentPermission === 'denied') {
-                    console.log('🔔 Permission already denied, showing reset option...');
+                    
                     this.showPermissionDeniedState();
                 }
             } catch (error) {
-                console.error('❌ Error enabling notifications:', error);
-                alert('Failed to enable notifications. Please check your browser settings.');
+                
+                this.showNiceModal(' Enable Error', 'Failed to enable notifications. Please check your browser settings.');
             }
         } else {
-            console.error('❌ Notifications not supported in this browser');
-            alert('Notifications are not supported in this browser.');
+            this.showNiceModal(' Not Supported', 'Notifications are not supported in this browser.');
         }
     }
 
@@ -815,6 +853,50 @@ class AquaTracker {
         }
     }
 
+    resetNotificationPermission() {
+        
+        
+        // Clear local storage
+        localStorage.removeItem('notifications-enabled');
+        this.updateNotificationIcon(false);
+        
+        // Clear service worker registration if exists
+        if ('serviceWorker' in navigator && navigator.serviceWorker.getRegistrations) {
+            navigator.serviceWorker.getRegistrations().then(registrations => {
+                registrations.forEach(registration => {
+                    registration.unregister();
+                    
+                });
+            });
+        }
+        
+        // Show instructions using modal instead of alert
+        this.showNiceModal('🔄 Permission Reset Complete!', `To test notifications again:
+1. ${this.getBrowserSpecificInstructions()}
+2. Refresh the page
+3. Click the notification button to try again
+
+Note: Some browsers may require you to clear site data completely.`);
+        
+        this.closeModal('notification-modal');
+    }
+    
+    getBrowserSpecificInstructions() {
+        const userAgent = navigator.userAgent.toLowerCase();
+        
+        if (userAgent.includes('chrome')) {
+            return 'Click lock icon (🔒) in address bar → Site settings → Notifications → Reset';
+        } else if (userAgent.includes('firefox')) {
+            return 'Click lock icon (🔒) in address bar → Permissions → Notifications → Remove';
+        } else if (userAgent.includes('safari')) {
+            return 'Safari → Preferences → Websites → Notifications → Remove this site';
+        } else if (userAgent.includes('edge')) {
+            return 'Click lock icon (🔒) in address bar → Site permissions → Notifications → Reset';
+        }
+        
+        return 'Go to browser settings → Privacy/Security → Site permissions → Notifications';
+    }
+
     disableNotifications() {
         localStorage.setItem('notifications-enabled', 'false');
         this.updateNotificationIcon(false);
@@ -823,7 +905,11 @@ class AquaTracker {
     updateNotificationIcon(enabled) {
         const icon = document.querySelector('.notification-icon');
         if (icon) {
-            icon.textContent = enabled ? '🔔' : '🔕';
+            if (enabled) {
+                icon.classList.add('enabled');
+            } else {
+                icon.classList.remove('enabled');
+            }
         }
     }
 
@@ -840,7 +926,7 @@ class AquaTracker {
     }
 
     switchTab(tabName) {
-        console.log(`📑 Switching to tab: ${tabName}`);
+        
         
         document.querySelectorAll('.tab-btn').forEach(btn => {
             btn.classList.remove('active');
@@ -865,10 +951,10 @@ class AquaTracker {
 
     // Filter Management
     renderFilters() {
-        console.log('🔄 Rendering filters...');
+        
         const grid = document.getElementById('filters-grid');
         if (!grid) {
-            console.error('❌ Filters grid not found');
+            
             return;
         }
 
@@ -918,7 +1004,7 @@ class AquaTracker {
             }
         });
 
-        console.log(`✅ Rendered ${filteredFilters.length} filter cards`);
+        
     }
 
     createFilterCard(filter) {
@@ -1069,7 +1155,7 @@ class AquaTracker {
             this.renderFilters();
             this.pendingDeleteId = null;
             
-            console.log('🗑️ Filter deleted successfully');
+            
         }
         this.closeModal('confirm-modal');
     }
@@ -1100,8 +1186,8 @@ class AquaTracker {
         this.updateStats();
         this.renderFilters();
 
-        alert(`✅ ${filter.name} marked as replaced! Next due: ${this.formatDate(filter.nextDueDate)}`);
-        console.log(`🔄 Filter ${filter.name} marked as replaced`);
+        this.showNiceModal('Filter Replaced', `✅ ${filter.name} marked as replaced! Next due: ${this.formatDate(filter.nextDueDate)}`);
+        
     }
 
     // Form Management
@@ -1207,12 +1293,12 @@ class AquaTracker {
             const index = this.filters.findIndex(f => f.id === this.editingFilterId);
             if (index !== -1) {
                 this.filters[index] = { ...this.filters[index], ...filterData };
-                console.log(`✏️ Filter updated: ${filterData.name}`);
+                
             }
         } else {
             filterData.id = 'filter-' + Date.now();
             this.filters.push(filterData);
-            console.log(`➕ New filter added: ${filterData.name}`);
+            
         }
 
         this.saveData();
@@ -1222,7 +1308,7 @@ class AquaTracker {
     }
 
     searchFilters(searchTerm) {
-        console.log(`🔍 Searching for: ${searchTerm}`);
+        
         this.renderFilters();
     }
 
@@ -1295,7 +1381,7 @@ class AquaTracker {
             this.history = [];
             this.saveHistory();
             this.renderHistory();
-            console.log('🗑️ History cleared');
+            
         }
     }
 
@@ -1387,7 +1473,7 @@ class AquaTracker {
         document.getElementById('due-soon-filters').textContent = stats.dueSoon;
         document.getElementById('good-filters').textContent = stats.good;
 
-        console.log(`📊 Stats updated:`, stats);
+        
     }
 
     calculateStats() {
@@ -1414,12 +1500,12 @@ class AquaTracker {
     // Data Management
     saveData() {
         localStorage.setItem('waterFilters', JSON.stringify(this.filters));
-        console.log('💾 Filter data saved to localStorage');
+        
     }
 
     saveHistory() {
         localStorage.setItem('filterHistory', JSON.stringify(this.history));
-        console.log('💾 History data saved to localStorage');
+        
     }
 
     exportAllData() {
@@ -1447,7 +1533,7 @@ class AquaTracker {
         a.click();
         URL.revokeObjectURL(url);
         
-        console.log('📤 Complete data exported');
+        
         
         // Show success notification
         new Notification('📤 AquaTracker', {
@@ -1473,11 +1559,11 @@ class AquaTracker {
                         body: 'Data imported successfully! All filters and history have been restored.'
                     });
                     
-                    console.log('📥 Complete data imported');
+                    
                 }
             } catch (error) {
-                alert('❌ Invalid file format. Please select a valid AquaTracker backup file.');
-                console.error('Import error:', error);
+                this.showNiceModal('Import Error', '❌ Invalid file format. Please select a valid AquaTracker backup file.');
+                
             }
         };
         reader.readAsText(file);
@@ -1499,21 +1585,21 @@ class AquaTracker {
         if ('serviceWorker' in navigator) {
             navigator.serviceWorker.register('./sw.js')
                 .then(registration => {
-                    console.log('✅ SW registered:', registration);
+                    
                     
                     // Wait for service worker to be active
                     if (registration.active) {
-                        console.log('🔔 Service worker is already active');
+                        
                     } else if (registration.installing) {
                         registration.installing.addEventListener('statechange', () => {
                             if (registration.installing && registration.installing.state === 'activated') {
-                                console.log('🔔 Service worker activated successfully');
+                                
                             }
                         });
                     }
                 })
                 .catch(error => {
-                    console.log('❌ SW registration failed:', error);
+                    
                 });
         }
 
@@ -1560,7 +1646,7 @@ class AquaTracker {
         const history = this.backupManager.backupHistory;
         
         if (history.length === 0) {
-            alert('No backup history available yet.');
+            this.showNiceModal('Backup History', 'No backup history available yet.');
             return;
         }
         
@@ -1571,11 +1657,11 @@ class AquaTracker {
             historyText += `${index + 1}. ${date.toLocaleString()} - ${backup.type} - ${sizeKB} KB\n`;
         });
         
-        alert(historyText);
+        this.showNiceModal('Backup History', historyText);
     }
 
     resetNotificationPermission() {
-        console.log('🔄 Resetting notification permission...');
+        
         
         // Clear the existing permission state
         localStorage.removeItem('notifications-enabled');
@@ -1591,7 +1677,7 @@ class AquaTracker {
 
 This will clear the blocked state and allow you to try again.`;
         
-        alert(instructions);
+        this.showNiceModal('Reset Notification Permission', instructions);
         this.closeModal('notification-modal');
     }
 
@@ -1600,7 +1686,6 @@ This will clear the blocked state and allow you to try again.`;
             if (Notification.permission === 'granted') {
                 new Notification('🔔 AquaTracker Test', {
                     body: 'This is a test notification! Your notifications are working correctly.',
-                    icon: '💧',
                     tag: 'test-notification',
                     requireInteraction: false
                 });
@@ -1615,12 +1700,12 @@ This will clear the blocked state and allow you to try again.`;
                     if (permission === 'granted') {
                         this.testNotification();
                     } else {
-                        alert('Please enable notifications in your browser settings to test notifications.');
+                        this.showNiceModal('Notifications Disabled', 'Please enable notifications in your browser settings to test notifications.');
                     }
                 });
             }
         } else {
-            alert('Notifications are not supported in this browser.');
+            this.showNiceModal('Not Supported', 'Notifications are not supported in this browser.');
         }
     }
 
@@ -1629,7 +1714,7 @@ This will clear the blocked state and allow you to try again.`;
             this.installPromptEvent.prompt();
             this.installPromptEvent.userChoice.then((result) => {
                 if (result.outcome === 'accepted') {
-                    console.log('✅ PWA installed');
+                    
                 }
                 this.installPromptEvent = null;
                 this.dismissInstallPrompt();
@@ -1640,7 +1725,8 @@ This will clear the blocked state and allow you to try again.`;
 
 // Push Notification Manager Class
 class PushNotificationManager {
-    constructor() {
+    constructor(app) {
+        this.app = app; // Reference to parent AquaTracker instance
         this.subscription = null;
         this.isSupported = 'serviceWorker' in navigator && 'PushManager' in window;
         // Remove VAPID requirement for browser notifications
@@ -1649,7 +1735,7 @@ class PushNotificationManager {
 
     async init() {
         if (!this.isSupported) {
-            console.log('⚠️ Push notifications not supported in this browser, will use browser notifications');
+            
             this.usePushNotifications = false;
             return;
         }
@@ -1662,11 +1748,11 @@ class PushNotificationManager {
             this.subscription = await registration.pushManager.getSubscription();
             
             if (this.subscription) {
-                console.log('✅ Already subscribed to push notifications');
+                
                 this.usePushNotifications = true;
                 this.updateUI(true);
             } else {
-                console.log('🔔 Not subscribed to push notifications yet');
+                
                 this.usePushNotifications = false;
                 this.updateUI(false);
             }
@@ -1677,14 +1763,13 @@ class PushNotificationManager {
             });
 
         } catch (error) {
-            console.error('❌ Error initializing push notifications:', error);
+            
             this.usePushNotifications = false;
         }
     }
 
     async subscribe() {
         // For now, just enable browser notifications
-        console.log('🔔 Enabling browser notifications (push notifications disabled for demo)');
         this.updateUI(true);
         return true;
     }
@@ -1699,15 +1784,15 @@ class PushNotificationManager {
             this.subscription = null;
             localStorage.removeItem('pushSubscription');
             this.updateUI(false);
-            console.log('🔕 Unsubscribed from push notifications');
+            
         } catch (error) {
-            console.error('❌ Error unsubscribing from push notifications:', error);
+            
         }
     }
 
     async sendSubscriptionToServer(subscription) {
         // In a real implementation, send to your server
-        console.log('📤 Subscription would be sent to server:', subscription);
+        
     }
 
     handleServiceWorkerMessage(event) {
@@ -1724,12 +1809,12 @@ class PushNotificationManager {
                 this.cancelNotification(data.id);
                 break;
             default:
-                console.log('Unknown message type:', type);
+                
         }
     }
 
     async checkAndScheduleReminders() {
-        console.log('🔔 Checking reminders...');
+        
         
         // Get filters from main app
         const filters = window.aquaTracker.filters;
@@ -1741,14 +1826,13 @@ class PushNotificationManager {
     }
 
     async checkAndScheduleRemindersEvenWhenClosed() {
-        console.log('🔔 Checking reminders (background check)...');
         
         // Get filters from main app (try to access even if app is closed)
         let filters = [];
         try {
             filters = window.aquaTracker?.filters || [];
         } catch (error) {
-            console.log('Could not access app filters, using empty array');
+            
             filters = [];
         }
         
@@ -1788,9 +1872,9 @@ class PushNotificationManager {
                 await this.scheduleNotification({
                     type: 'replace-reminder',
                     filter: filter,
-                    title: `🔄 Replace ${filter.name}`,
-                    body: `${filter.name} at ${filter.location} is due for replacement today!`,
-                    tag: `replace-${filter.id}`,
+                    title: '🔄 Replace ' + filter.name,
+                    body: filter.name + ' at ' + filter.location + ' is due for replacement today!',
+                    tag: 'replace-' + filter.id,
                     data: { filterId: filter.id, type: 'replace-reminder' },
                     requireInteraction: true,
                     actions: [
@@ -1808,7 +1892,7 @@ class PushNotificationManager {
                 await this.scheduleNotification({
                     type: 'critical-overdue',
                     filter: filter,
-                    title: `🚨 ${filter.name} is CRITICALLY OVERDUE`,
+                    title: `⚠️ ${filter.name} is CRITICALLY OVERDUE`,
                     body: `${filter.name} at ${filter.location} is ${Math.abs(daysUntilDue)} days overdue! Immediate replacement required!`,
                     tag: `critical-${filter.id}`,
                     data: { filterId: filter.id, type: 'critical-overdue' },
@@ -1823,16 +1907,15 @@ class PushNotificationManager {
     }
 
     async scheduleNotification(options) {
-        console.log('🔔 Scheduling notification:', options);
+        
         
         // For browser notifications, show immediately
         if ('Notification' in window && Notification.permission === 'granted') {
             new Notification(options.title, {
                 body: options.body,
-                icon: options.icon || '💧',
                 tag: options.tag || 'aquatracker',
-                requireInteraction: options.requireInteraction || false,
-                actions: options.actions || []
+                requireInteraction: options.requireInteraction || false
+                // Note: actions are only supported in Service Worker notifications
             });
         }
         
@@ -1850,14 +1933,12 @@ class PushNotificationManager {
     }
 
     updateUI(subscribed) {
-        const icon = document.querySelector('.notification-icon');
-        if (icon) {
-            icon.textContent = subscribed ? '🔔' : '🔕';
-        }
+        // Use the parent app's CSS-based notification icon update
+        this.app.updateNotificationIcon(subscribed);
         
         const enabled = localStorage.getItem('notifications-enabled') === 'true';
         if (subscribed && enabled) {
-            console.log('✅ Push notifications fully enabled');
+            
         }
     }
 
@@ -1885,7 +1966,7 @@ class BackupManager {
     }
 
     async init() {
-        console.log('💾 Initializing backup manager...');
+        
         
         // Register periodic sync for daily backups
         if ('serviceWorker' in navigator) {
@@ -1906,7 +1987,7 @@ class BackupManager {
         // Check if backup is needed
         this.checkBackupNeeded();
         
-        console.log('✅ Backup manager initialized');
+        
     }
 
     handleServiceWorkerMessage(event) {
@@ -1917,7 +1998,7 @@ class BackupManager {
                 this.performBackup();
                 break;
             default:
-                console.log('Unknown message type:', type);
+                
         }
     }
 
@@ -1927,7 +2008,7 @@ class BackupManager {
         const daysSinceBackup = Math.floor((now - lastBackupDate) / (1000 * 60 * 60 * 24));
 
         if (this.backupSchedule !== 'disabled' && daysSinceBackup >= this.getBackupInterval()) {
-            console.log('💾 Backup needed, performing automatic backup...');
+            
             this.performBackup();
         }
     }
@@ -1943,7 +2024,7 @@ class BackupManager {
 
     async performBackup() {
         try {
-            console.log('💾 Performing backup...');
+            
             
             const backup = {
                 filters: this.app.filters,
@@ -1974,10 +2055,10 @@ class BackupManager {
             // Update UI
             this.updateBackupStatus();
             
-            console.log('✅ Automatic backup completed successfully');
+            
             
         } catch (error) {
-            console.error('❌ Error performing backup:', error);
+            
         }
     }
 
@@ -2100,10 +2181,10 @@ class BackupManager {
             this.app.updateStats();
             this.app.renderFilters();
             
-            console.log('✅ Backup restored successfully');
+            
             
         } catch (error) {
-            console.error('❌ Error restoring backup:', error);
+            
             throw error;
         }
     }
@@ -2119,7 +2200,5 @@ class BackupManager {
 
 // Initialize when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 DOM loaded, initializing AquaTracker...');
     window.aquaTracker = new AquaTracker();
-    console.log('🎉 AquaTracker initialized successfully!');
 });

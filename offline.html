@@ -268,12 +268,12 @@
 
     // Listen for connection changes
     window.addEventListener('online', () => {
-      console.log('🌐 Connection restored');
+      
       updateConnectionStatus();
     });
 
     window.addEventListener('offline', () => {
-      console.log('📡 Connection lost');
+      
       updateConnectionStatus();
     });
 
@@ -292,7 +292,7 @@
       retryAttempts = 0;
     }, 60000);
 
-    console.log('📱 AquaTracker Offline Page Loaded - All features available offline!');
+    
   </script>
 </body>
 </html>
