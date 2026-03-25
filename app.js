@@ -114,6 +114,8 @@ class AquaTracker {
         this.currency = 'EGP';
         this.pendingDeleteId = null;
         this.themeController = new ThemeController();
+        this.pushNotificationManager = new PushNotificationManager();
+        this.backupManager = new BackupManager(this);
         
         console.log('AquaTracker: Initializing complete application...');
         this.init();
@@ -130,6 +132,11 @@ class AquaTracker {
             this.initializeTabs();
             this.initializePWA();
             this.loadCurrency();
+            
+            // Initialize new features
+            this.pushNotificationManager.init();
+            this.backupManager.init();
+            
             console.log('✅ AquaTracker: Complete application loaded successfully');
         } catch (error) {
             console.error('❌ AquaTracker: Initialization error:', error);
@@ -493,15 +500,32 @@ class AquaTracker {
             importFile.addEventListener('change', (e) => this.importData(e));
         }
 
-        const resetData = document.getElementById('reset-data');
-        if (resetData) {
-            resetData.addEventListener('click', () => this.confirmResetData());
-        }
-
-        // Currency selector
         const currencySelect = document.getElementById('currency-select');
         if (currencySelect) {
             currencySelect.addEventListener('change', (e) => this.setCurrency(e.target.value));
+        }
+
+        const resetData = document.getElementById('reset-data');
+        if (resetData) {
+            resetData.addEventListener('click', () => this.resetAllData());
+        }
+
+        // Backup settings
+        const backupFrequency = document.getElementById('backup-frequency');
+        if (backupFrequency) {
+            backupFrequency.addEventListener('change', (e) => {
+                this.backupManager.setBackupSchedule(e.target.value);
+            });
+        }
+
+        const manualBackup = document.getElementById('manual-backup');
+        if (manualBackup) {
+            manualBackup.addEventListener('click', () => this.backupManager.performBackup());
+        }
+
+        const viewBackupHistory = document.getElementById('view-backup-history');
+        if (viewBackupHistory) {
+            viewBackupHistory.addEventListener('click', () => this.showBackupHistory());
         }
 
         // Mobile PWA Cache Controls
@@ -514,6 +538,11 @@ class AquaTracker {
         
         if (checkUpdatesBtn) {
             checkUpdatesBtn.addEventListener('click', () => this.checkForUpdates());
+        }
+
+        const testNotification = document.getElementById('test-notification');
+        if (testNotification) {
+            testNotification.addEventListener('click', () => this.testNotification());
         }
 
         // Advanced notification toggles
@@ -619,8 +648,25 @@ class AquaTracker {
 
         const notificationEnable = document.getElementById('notification-enable');
         const notificationCancel = document.getElementById('notification-cancel');
-        if (notificationEnable) notificationEnable.addEventListener('click', () => this.enableNotifications());
-        if (notificationCancel) notificationCancel.addEventListener('click', () => this.closeModal('notification-modal'));
+        const resetPermission = document.getElementById('reset-permission');
+        
+        if (notificationEnable) {
+            console.log('🔔 Found notification enable button, binding event...');
+            notificationEnable.addEventListener('click', (e) => {
+                console.log('🔔 Notification enable button clicked!');
+                this.enableNotifications();
+            });
+        } else {
+            console.error('❌ Notification enable button not found!');
+        }
+        
+        if (notificationCancel) {
+            notificationCancel.addEventListener('click', () => this.closeModal('notification-modal'));
+        }
+        
+        if (resetPermission) {
+            resetPermission.addEventListener('click', () => this.resetNotificationPermission());
+        }
 
         document.addEventListener('click', (e) => {
             if (e.target.classList.contains('modal')) {
@@ -684,21 +730,88 @@ class AquaTracker {
         }
     }
 
-    enableNotifications() {
+    async enableNotifications() {
+        console.log('🔔 enableNotifications() called!');
+        
+        // Check current permission state first
+        const currentPermission = Notification.permission;
+        console.log('🔔 Current permission state:', currentPermission);
+        
         if ('Notification' in window) {
-            Notification.requestPermission().then(permission => {
-                if (permission === 'granted') {
-                    localStorage.setItem('notifications-enabled', 'true');
-                    this.updateNotificationIcon(true);
-                    this.closeModal('notification-modal');
+            try {
+                if (currentPermission === 'default') {
+                    console.log('🔔 Requesting notification permission...');
+                    // Request browser notification permission first
+                    const permission = await Notification.requestPermission();
+                    console.log('🔔 Permission result:', permission);
                     
-                    new Notification('🔔 AquaTracker', {
-                        body: 'Advanced notifications enabled! You\'ll get customized reminders for each filter.'
-                    });
-                } else {
-                    alert('Please enable notifications in your browser settings to receive advanced filter reminders.');
+                    if (permission === 'granted') {
+                        console.log('🔔 Permission granted, setting up notifications...');
+                        localStorage.setItem('notifications-enabled', 'true');
+                        this.updateNotificationIcon(true);
+                        this.closeModal('notification-modal');
+                        
+                        // Test notification immediately
+                        console.log('🔔 Sending test notification...');
+                        new Notification('🔔 AquaTracker', {
+                            body: 'Notifications enabled! You\'ll get reminders for your water filters.'
+                        });
+                        
+                        // Try to enable push notifications
+                        try {
+                            await this.pushNotificationManager.subscribe();
+                            
+                            // Test reminder check
+                            setTimeout(() => {
+                                this.pushNotificationManager.checkAndScheduleReminders();
+                            }, 1000);
+                            
+                        } catch (pushError) {
+                            console.log('⚠️ Push notifications not available, using browser notifications only');
+                        }
+                    } else if (permission === 'denied') {
+                        console.log('🔔 Permission denied, showing reset option...');
+                        this.showPermissionDeniedState();
+                    }
+                } else if (currentPermission === 'denied') {
+                    console.log('🔔 Permission already denied, showing reset option...');
+                    this.showPermissionDeniedState();
                 }
-            });
+            } catch (error) {
+                console.error('❌ Error enabling notifications:', error);
+                alert('Failed to enable notifications. Please check your browser settings.');
+            }
+        } else {
+            console.error('❌ Notifications not supported in this browser');
+            alert('Notifications are not supported in this browser.');
+        }
+    }
+
+    showPermissionDeniedState() {
+        // Show reset permission button
+        const resetBtn = document.getElementById('reset-permission');
+        if (resetBtn) {
+            resetBtn.style.display = 'inline-block';
+        }
+        
+        // Update modal content to show permission denied state
+        const modalBody = document.querySelector('#notification-modal .modal-body');
+        if (modalBody) {
+            modalBody.innerHTML = `
+                <p style="color: var(--danger-color); font-weight: bold; margin-bottom: 1rem;">
+                    ❌ Notifications were blocked
+                </p>
+                <p>To enable notifications for AquaTracker:</p>
+                <ol style="margin-left: 1.5rem; line-height: 1.8;">
+                    <li>Click the 🔔 icon in your browser's address bar</li>
+                    <li>Select "Allow" when prompted</li>
+                    <li>Or go to browser settings > Privacy > Notifications</li>
+                    <li>Refresh this page and try again</li>
+                </ol>
+                <p style="margin-top: 1rem;">
+                    <strong>💡 Tip:</strong> Some browsers permanently block notifications after multiple denials. Use the "Reset Permission" button below to clear the blocked state.
+                </p>
+            `;
         }
     }
 
@@ -1318,8 +1431,12 @@ class AquaTracker {
                 notificationsEnabled: localStorage.getItem('notifications-enabled'),
                 currency: this.currency
             },
-            exported: new Date().toISOString(),
-            version: '3.0.0'
+            metadata: {
+                exported: new Date().toISOString(),
+                version: '3.1.0',
+                type: 'manual',
+                checksum: this.backupManager.calculateChecksum()
+            }
         };
         
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -1331,6 +1448,11 @@ class AquaTracker {
         URL.revokeObjectURL(url);
         
         console.log('📤 Complete data exported');
+        
+        // Show success notification
+        new Notification('📤 AquaTracker', {
+            body: 'Data exported successfully! Save this file in a safe location.'
+        });
     }
 
     importData(event) {
@@ -1338,31 +1460,19 @@ class AquaTracker {
         if (!file) return;
 
         const reader = new FileReader();
-        reader.onload = (e) => {
+        reader.onload = async (e) => {
             try {
                 const data = JSON.parse(e.target.result);
                 
                 if (confirm('This will replace all current data. Are you sure?')) {
-                    if (data.filters) this.filters = data.filters;
-                    if (data.history) this.history = data.history;
-                    if (data.settings) {
-                        if (data.settings.theme) {
-                            this.themeController.forceApplyTheme(data.settings.theme);
-                        }
-                        if (data.settings.notificationsEnabled) {
-                            localStorage.setItem('notifications-enabled', data.settings.notificationsEnabled);
-                        }
-                        if (data.settings.currency) {
-                            this.setCurrency(data.settings.currency);
-                        }
-                    }
+                    // Use backup manager to restore data with validation
+                    await this.backupManager.restoreFromBackup(data);
                     
-                    this.saveData();
-                    this.saveHistory();
-                    this.updateStats();
-                    this.renderFilters();
+                    // Show success notification
+                    new Notification('✅ AquaTracker', {
+                        body: 'Data imported successfully! All filters and history have been restored.'
+                    });
                     
-                    alert('✅ Complete data imported successfully with all notification settings!');
                     console.log('📥 Complete data imported');
                 }
             } catch (error) {
@@ -1390,6 +1500,17 @@ class AquaTracker {
             navigator.serviceWorker.register('./sw.js')
                 .then(registration => {
                     console.log('✅ SW registered:', registration);
+                    
+                    // Wait for service worker to be active
+                    if (registration.active) {
+                        console.log('🔔 Service worker is already active');
+                    } else if (registration.installing) {
+                        registration.installing.addEventListener('statechange', () => {
+                            if (registration.installing && registration.installing.state === 'activated') {
+                                console.log('🔔 Service worker activated successfully');
+                            }
+                        });
+                    }
                 })
                 .catch(error => {
                     console.log('❌ SW registration failed:', error);
@@ -1401,6 +1522,21 @@ class AquaTracker {
             this.installPromptEvent = e;
             this.showInstallPrompt();
         });
+
+        // Listen for messages from service worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                const { type } = event.data;
+                
+                if (type === 'GET_FILTERS') {
+                    // Send filters back to service worker
+                    event.ports[0].postMessage({
+                        type: 'FILTERS_DATA',
+                        filters: this.filters
+                    });
+                }
+            });
+        }
 
         const enabled = localStorage.getItem('notifications-enabled') === 'true';
         this.updateNotificationIcon(enabled);
@@ -1420,6 +1556,74 @@ class AquaTracker {
         }
     }
 
+    showBackupHistory() {
+        const history = this.backupManager.backupHistory;
+        
+        if (history.length === 0) {
+            alert('No backup history available yet.');
+            return;
+        }
+        
+        let historyText = 'Backup History:\n\n';
+        history.forEach((backup, index) => {
+            const date = new Date(backup.timestamp);
+            const sizeKB = (backup.size / 1024).toFixed(2);
+            historyText += `${index + 1}. ${date.toLocaleString()} - ${backup.type} - ${sizeKB} KB\n`;
+        });
+        
+        alert(historyText);
+    }
+
+    resetNotificationPermission() {
+        console.log('🔄 Resetting notification permission...');
+        
+        // Clear the existing permission state
+        localStorage.removeItem('notifications-enabled');
+        this.updateNotificationIcon(false);
+        
+        // Show instructions for manual reset
+        const instructions = `To reset notification permissions:
+
+1. Click the 🔔 icon in your browser's address bar
+2. Click "Remove" or "Block" 
+3. Refresh the page
+4. Try enabling notifications again
+
+This will clear the blocked state and allow you to try again.`;
+        
+        alert(instructions);
+        this.closeModal('notification-modal');
+    }
+
+    testNotification() {
+        if ('Notification' in window) {
+            if (Notification.permission === 'granted') {
+                new Notification('🔔 AquaTracker Test', {
+                    body: 'This is a test notification! Your notifications are working correctly.',
+                    icon: '💧',
+                    tag: 'test-notification',
+                    requireInteraction: false
+                });
+                
+                // Also test reminder scheduling
+                setTimeout(() => {
+                    this.pushNotificationManager.checkAndScheduleReminders();
+                }, 1000);
+                
+            } else {
+                Notification.requestPermission().then(permission => {
+                    if (permission === 'granted') {
+                        this.testNotification();
+                    } else {
+                        alert('Please enable notifications in your browser settings to test notifications.');
+                    }
+                });
+            }
+        } else {
+            alert('Notifications are not supported in this browser.');
+        }
+    }
+
     installPWA() {
         if (this.installPromptEvent) {
             this.installPromptEvent.prompt();
@@ -1431,6 +1635,485 @@ class AquaTracker {
                 this.dismissInstallPrompt();
             });
         }
+    }
+}
+
+// Push Notification Manager Class
+class PushNotificationManager {
+    constructor() {
+        this.subscription = null;
+        this.isSupported = 'serviceWorker' in navigator && 'PushManager' in window;
+        // Remove VAPID requirement for browser notifications
+        this.usePushNotifications = false;
+    }
+
+    async init() {
+        if (!this.isSupported) {
+            console.log('⚠️ Push notifications not supported in this browser, will use browser notifications');
+            this.usePushNotifications = false;
+            return;
+        }
+
+        try {
+            // Register service worker for push notifications
+            const registration = await navigator.serviceWorker.ready;
+            
+            // Check existing subscription
+            this.subscription = await registration.pushManager.getSubscription();
+            
+            if (this.subscription) {
+                console.log('✅ Already subscribed to push notifications');
+                this.usePushNotifications = true;
+                this.updateUI(true);
+            } else {
+                console.log('🔔 Not subscribed to push notifications yet');
+                this.usePushNotifications = false;
+                this.updateUI(false);
+            }
+
+            // Listen for messages from service worker
+            navigator.serviceWorker.addEventListener('message', (event) => {
+                this.handleServiceWorkerMessage(event);
+            });
+
+        } catch (error) {
+            console.error('❌ Error initializing push notifications:', error);
+            this.usePushNotifications = false;
+        }
+    }
+
+    async subscribe() {
+        // For now, just enable browser notifications
+        console.log('🔔 Enabling browser notifications (push notifications disabled for demo)');
+        this.updateUI(true);
+        return true;
+    }
+
+    async unsubscribe() {
+        if (!this.subscription) {
+            return;
+        }
+
+        try {
+            await this.subscription.unsubscribe();
+            this.subscription = null;
+            localStorage.removeItem('pushSubscription');
+            this.updateUI(false);
+            console.log('🔕 Unsubscribed from push notifications');
+        } catch (error) {
+            console.error('❌ Error unsubscribing from push notifications:', error);
+        }
+    }
+
+    async sendSubscriptionToServer(subscription) {
+        // In a real implementation, send to your server
+        console.log('📤 Subscription would be sent to server:', subscription);
+    }
+
+    handleServiceWorkerMessage(event) {
+        const { type, data } = event.data;
+        
+        switch (type) {
+            case 'CHECK_REMINDERS':
+                this.checkAndScheduleRemindersEvenWhenClosed();
+                break;
+            case 'SCHEDULE_NOTIFICATION':
+                this.scheduleNotification(data);
+                break;
+            case 'CANCEL_NOTIFICATION':
+                this.cancelNotification(data.id);
+                break;
+            default:
+                console.log('Unknown message type:', type);
+        }
+    }
+
+    async checkAndScheduleReminders() {
+        console.log('🔔 Checking reminders...');
+        
+        // Get filters from main app
+        const filters = window.aquaTracker.filters;
+        const today = new Date();
+        
+        for (const filter of filters) {
+            await this.checkFilterReminders(filter, today);
+        }
+    }
+
+    async checkAndScheduleRemindersEvenWhenClosed() {
+        console.log('🔔 Checking reminders (background check)...');
+        
+        // Get filters from main app (try to access even if app is closed)
+        let filters = [];
+        try {
+            filters = window.aquaTracker?.filters || [];
+        } catch (error) {
+            console.log('Could not access app filters, using empty array');
+            filters = [];
+        }
+        
+        const today = new Date();
+        
+        for (const filter of filters) {
+            await this.checkFilterReminders(filter, today);
+        }
+    }
+
+    async checkFilterReminders(filter, today) {
+        const settings = filter.notificationSettings;
+        if (!settings) return;
+
+        const dueDate = new Date(filter.nextDueDate);
+        const daysUntilDue = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+
+        // Check buy reminder
+        if (settings.buyReminder && settings.buyReminder.enabled) {
+            const buyReminderDays = settings.buyReminder.timing;
+            if (daysUntilDue === buyReminderDays) {
+                await this.scheduleNotification({
+                    type: 'buy-reminder',
+                    filter: filter,
+                    title: `🛒 Time to buy ${filter.name}`,
+                    body: `${filter.name} at ${filter.location} needs replacement in ${buyReminderDays} days. Order now to avoid interruption!`,
+                    tag: `buy-${filter.id}`,
+                    data: { filterId: filter.id, type: 'buy-reminder' }
+                });
+            }
+        }
+
+        // Check replace reminder
+        if (settings.replaceReminder && settings.replaceReminder.enabled) {
+            const replaceReminderDays = settings.replaceReminder.timing;
+            if (daysUntilDue <= replaceReminderDays) {
+                await this.scheduleNotification({
+                    type: 'replace-reminder',
+                    filter: filter,
+                    title: `🔄 Replace ${filter.name}`,
+                    body: `${filter.name} at ${filter.location} is due for replacement today!`,
+                    tag: `replace-${filter.id}`,
+                    data: { filterId: filter.id, type: 'replace-reminder' },
+                    requireInteraction: true,
+                    actions: [
+                        { action: 'view-filter', title: 'View Filter' },
+                        { action: 'dismiss', title: 'Dismiss' }
+                    ]
+                });
+            }
+        }
+
+        // Check critical overdue
+        if (settings.criticalReminder && settings.criticalReminder.enabled) {
+            const criticalDays = settings.criticalReminder.threshold;
+            if (daysUntilDue < -criticalDays) {
+                await this.scheduleNotification({
+                    type: 'critical-overdue',
+                    filter: filter,
+                    title: `🚨 ${filter.name} is CRITICALLY OVERDUE`,
+                    body: `${filter.name} at ${filter.location} is ${Math.abs(daysUntilDue)} days overdue! Immediate replacement required!`,
+                    tag: `critical-${filter.id}`,
+                    data: { filterId: filter.id, type: 'critical-overdue' },
+                    requireInteraction: true,
+                    actions: [
+                        { action: 'view-filter', title: 'View Filter' },
+                        { action: 'dismiss', title: 'Dismiss' }
+                    ]
+                });
+            }
+        }
+    }
+
+    async scheduleNotification(options) {
+        console.log('🔔 Scheduling notification:', options);
+        
+        // For browser notifications, show immediately
+        if ('Notification' in window && Notification.permission === 'granted') {
+            new Notification(options.title, {
+                body: options.body,
+                icon: options.icon || '💧',
+                tag: options.tag || 'aquatracker',
+                requireInteraction: options.requireInteraction || false,
+                actions: options.actions || []
+            });
+        }
+        
+        // Also try to send to service worker for background processing
+        if (navigator.serviceWorker.controller) {
+            navigator.serviceWorker.controller.postMessage({
+                type: 'SCHEDULE_NOTIFICATION',
+                data: {
+                    id: `${options.type}-${options.filter.id}-${Date.now()}`,
+                    ...options,
+                    immediate: true
+                }
+            });
+        }
+    }
+
+    updateUI(subscribed) {
+        const icon = document.querySelector('.notification-icon');
+        if (icon) {
+            icon.textContent = subscribed ? '🔔' : '🔕';
+        }
+        
+        const enabled = localStorage.getItem('notifications-enabled') === 'true';
+        if (subscribed && enabled) {
+            console.log('✅ Push notifications fully enabled');
+        }
+    }
+
+    urlBase64ToUint8Array(base64String) {
+        const padding = '='.repeat((4 - base64String.length % 4) % 4);
+        const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+        const rawData = window.atob(base64);
+        const outputArray = new Uint8Array(rawData.length);
+        
+        for (let i = 0; i < rawData.length; ++i) {
+            outputArray[i] = rawData.charCodeAt(i);
+        }
+        
+        return outputArray;
+    }
+}
+
+// Backup Manager Class
+class BackupManager {
+    constructor(app) {
+        this.app = app;
+        this.backupSchedule = localStorage.getItem('backup-schedule') || 'daily';
+        this.lastBackup = localStorage.getItem('last-backup');
+        this.backupHistory = JSON.parse(localStorage.getItem('backup-history') || '[]');
+    }
+
+    async init() {
+        console.log('💾 Initializing backup manager...');
+        
+        // Register periodic sync for daily backups
+        if ('serviceWorker' in navigator) {
+            const registration = await navigator.serviceWorker.ready;
+            if (registration.active) {
+                registration.active.postMessage({
+                    type: 'REGISTER_PERIODIC_SYNC',
+                    data: { tag: 'daily-backup', minInterval: 24 * 60 * 60 * 1000 }
+                });
+            }
+        }
+
+        // Listen for messages from service worker
+        navigator.serviceWorker.addEventListener('message', (event) => {
+            this.handleServiceWorkerMessage(event);
+        });
+
+        // Check if backup is needed
+        this.checkBackupNeeded();
+        
+        console.log('✅ Backup manager initialized');
+    }
+
+    handleServiceWorkerMessage(event) {
+        const { type, data } = event.data;
+        
+        switch (type) {
+            case 'PERFORM_BACKUP':
+                this.performBackup();
+                break;
+            default:
+                console.log('Unknown message type:', type);
+        }
+    }
+
+    checkBackupNeeded() {
+        const now = new Date();
+        const lastBackupDate = this.lastBackup ? new Date(this.lastBackup) : new Date(0);
+        const daysSinceBackup = Math.floor((now - lastBackupDate) / (1000 * 60 * 60 * 24));
+
+        if (this.backupSchedule !== 'disabled' && daysSinceBackup >= this.getBackupInterval()) {
+            console.log('💾 Backup needed, performing automatic backup...');
+            this.performBackup();
+        }
+    }
+
+    getBackupInterval() {
+        switch (this.backupSchedule) {
+            case 'daily': return 1;
+            case 'weekly': return 7;
+            case 'monthly': return 30;
+            default: return 1;
+        }
+    }
+
+    async performBackup() {
+        try {
+            console.log('💾 Performing backup...');
+            
+            const backup = {
+                filters: this.app.filters,
+                history: this.app.history,
+                settings: {
+                    theme: this.app.themeController.currentTheme,
+                    notificationsEnabled: localStorage.getItem('notifications-enabled'),
+                    currency: this.app.currency
+                },
+                metadata: {
+                    timestamp: new Date().toISOString(),
+                    version: '3.1.0',
+                    type: 'automatic',
+                    checksum: this.calculateChecksum()
+                }
+            };
+
+            // Save to localStorage
+            await this.saveLocalBackup(backup);
+            
+            // Update last backup time
+            this.lastBackup = new Date().toISOString();
+            localStorage.setItem('last-backup', this.lastBackup);
+            
+            // Update backup history
+            this.updateBackupHistory(backup);
+            
+            // Update UI
+            this.updateBackupStatus();
+            
+            console.log('✅ Automatic backup completed successfully');
+            
+        } catch (error) {
+            console.error('❌ Error performing backup:', error);
+        }
+    }
+
+    async saveLocalBackup(backup) {
+        // Save current backup
+        localStorage.setItem('latest-backup', JSON.stringify(backup));
+        
+        // Compress and save to backup history
+        const backupKey = `backup-${backup.metadata.timestamp.split('T')[0]}`;
+        localStorage.setItem(backupKey, JSON.stringify(backup));
+        
+        // Clean up old backups
+        this.cleanupOldBackups();
+    }
+
+    cleanupOldBackups() {
+        const maxBackups = 7; // Keep last 7 days
+        const backupKeys = Object.keys(localStorage).filter(key => key.startsWith('backup-'));
+        
+        if (backupKeys.length > maxBackups) {
+            backupKeys.sort().slice(0, backupKeys.length - maxBackups).forEach(key => {
+                localStorage.removeItem(key);
+            });
+        }
+    }
+
+    updateBackupHistory(backup) {
+        this.backupHistory.unshift({
+            timestamp: backup.metadata.timestamp,
+            type: backup.metadata.type,
+            size: JSON.stringify(backup).length
+        });
+        
+        // Keep only last 30 backups in history
+        this.backupHistory = this.backupHistory.slice(0, 30);
+        
+        localStorage.setItem('backup-history', JSON.stringify(this.backupHistory));
+    }
+
+    calculateChecksum() {
+        const data = JSON.stringify(this.app.filters) + JSON.stringify(this.app.history);
+        let hash = 0;
+        for (let i = 0; i < data.length; i++) {
+            const char = data.charCodeAt(i);
+            hash = ((hash << 5) - hash) + char;
+            hash = hash & hash; // Convert to 32-bit integer
+        }
+        return hash.toString(16);
+    }
+
+    updateBackupStatus() {
+        const lastBackupElement = document.getElementById('last-backup-time');
+        if (lastBackupElement && this.lastBackup) {
+            const lastBackupDate = new Date(this.lastBackup);
+            lastBackupElement.textContent = this.formatDate(lastBackupDate);
+        }
+
+        const storageUsedElement = document.getElementById('backup-storage');
+        if (storageUsedElement) {
+            const storageUsed = this.calculateStorageUsed();
+            storageUsedElement.textContent = `${storageUsed} MB`;
+        }
+    }
+
+    calculateStorageUsed() {
+        let totalSize = 0;
+        Object.keys(localStorage).forEach(key => {
+            if (key.startsWith('backup-') || key === 'latest-backup') {
+                totalSize += localStorage.getItem(key).length;
+            }
+        });
+        return (totalSize / (1024 * 1024)).toFixed(2);
+    }
+
+    formatDate(date) {
+        const now = new Date();
+        const diff = now - date;
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        
+        if (days === 0) return 'Today';
+        if (days === 1) return 'Yesterday';
+        if (days < 7) return `${days} days ago`;
+        
+        return date.toLocaleDateString();
+    }
+
+    setBackupSchedule(schedule) {
+        this.backupSchedule = schedule;
+        localStorage.setItem('backup-schedule', schedule);
+        this.checkBackupNeeded();
+    }
+
+    async restoreFromBackup(backupData) {
+        try {
+            // Validate backup data
+            if (!this.validateBackup(backupData)) {
+                throw new Error('Invalid backup data');
+            }
+
+            // Restore data
+            if (backupData.filters) this.app.filters = backupData.filters;
+            if (backupData.history) this.app.history = backupData.history;
+            if (backupData.settings) {
+                if (backupData.settings.theme) {
+                    this.app.themeController.forceApplyTheme(backupData.settings.theme);
+                }
+                if (backupData.settings.notificationsEnabled) {
+                    localStorage.setItem('notifications-enabled', backupData.settings.notificationsEnabled);
+                }
+                if (backupData.settings.currency) {
+                    this.app.currency = backupData.settings.currency;
+                }
+            }
+
+            // Save restored data
+            this.app.saveData();
+            this.app.saveHistory();
+            
+            // Update UI
+            this.app.updateStats();
+            this.app.renderFilters();
+            
+            console.log('✅ Backup restored successfully');
+            
+        } catch (error) {
+            console.error('❌ Error restoring backup:', error);
+            throw error;
+        }
+    }
+
+    validateBackup(backup) {
+        return backup && 
+               backup.filters && 
+               Array.isArray(backup.filters) && 
+               backup.metadata &&
+               backup.metadata.timestamp;
     }
 }
 
