@@ -1,0 +1,7 @@
+project_id = "filter-tracker-v1"
+
+[functions.aquatracker-push-subscriptions]
+verify_jwt = true
+
+[functions.aquatracker-send-notifications]
+verify_jwt = false

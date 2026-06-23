@@ -1,4 +1,4 @@
-// AquaTracker - Complete App with Mobile PWA Theme Fix
+﻿// AquaTracker - Complete App with Mobile PWA Theme Fix
 
 class ThemeController {
     constructor() {
@@ -94,6 +94,12 @@ class ThemeController {
     }
 }
 
+const AQUATRACKER_CLOUD_CONFIG = {
+    supabaseUrl: window.AQUATRACKER_ENV?.SUPABASE_URL || '',
+    supabaseAnonKey: window.AQUATRACKER_ENV?.SUPABASE_ANON_KEY || '',
+    vapidPublicKey: window.AQUATRACKER_ENV?.VAPID_PUBLIC_KEY || ''
+};
+
 class AquaTracker {
     constructor() {
         this.filters = [];
@@ -104,6 +110,7 @@ class AquaTracker {
         this.currency = 'EGP';
         this.pendingDeleteId = null;
         this.themeController = new ThemeController();
+        this.cloudSyncManager = new CloudSyncManager(this);
         this.pushNotificationManager = new PushNotificationManager(this);
         this.backupManager = new BackupManager(this);
         
@@ -121,6 +128,7 @@ class AquaTracker {
             this.initializeTabs();
             this.initializePWA();
             this.loadCurrency();
+            this.cloudSyncManager.init();
             
             // Initialize new features
             this.pushNotificationManager.init();
@@ -512,6 +520,36 @@ class AquaTracker {
         const viewBackupHistory = document.getElementById('view-backup-history');
         if (viewBackupHistory) {
             viewBackupHistory.addEventListener('click', () => this.showBackupHistory());
+        }
+
+        const cloudSignIn = document.getElementById('cloud-sign-in');
+        if (cloudSignIn) {
+            cloudSignIn.addEventListener('click', () => this.cloudSyncManager.signInFromUI());
+        }
+
+        const cloudSignUp = document.getElementById('cloud-sign-up');
+        if (cloudSignUp) {
+            cloudSignUp.addEventListener('click', () => this.cloudSyncManager.signUpFromUI());
+        }
+
+        const cloudSignOut = document.getElementById('cloud-sign-out');
+        if (cloudSignOut) {
+            cloudSignOut.addEventListener('click', () => this.cloudSyncManager.signOut());
+        }
+
+        const migrateCloudData = document.getElementById('migrate-cloud-data');
+        if (migrateCloudData) {
+            migrateCloudData.addEventListener('click', () => this.cloudSyncManager.migrateLocalData());
+        }
+
+        const subscribeCloudPush = document.getElementById('subscribe-cloud-push');
+        if (subscribeCloudPush) {
+            subscribeCloudPush.addEventListener('click', () => this.pushNotificationManager.subscribe());
+        }
+
+        const unsubscribeCloudPush = document.getElementById('unsubscribe-cloud-push');
+        if (unsubscribeCloudPush) {
+            unsubscribeCloudPush.addEventListener('click', () => this.pushNotificationManager.unsubscribe());
         }
 
         // Mobile PWA Cache Controls
@@ -1187,6 +1225,7 @@ Note: Some browsers may require you to clear site data completely.`);
         this.renderFilters();
 
         this.showNiceModal('Filter Replaced', `✅ ${filter.name} marked as replaced! Next due: ${this.formatDate(filter.nextDueDate)}`);
+        this.cloudSyncManager?.markFilterReplaced(filter, this.history[0]);
         
     }
 
@@ -1500,11 +1539,13 @@ Note: Some browsers may require you to clear site data completely.`);
     // Data Management
     saveData() {
         localStorage.setItem('waterFilters', JSON.stringify(this.filters));
+        this.cloudSyncManager?.queueFiltersSync();
         
     }
 
     saveHistory() {
         localStorage.setItem('filterHistory', JSON.stringify(this.history));
+        this.cloudSyncManager?.queueHistorySync();
         
     }
 
@@ -1723,6 +1764,326 @@ This will clear the blocked state and allow you to try again.`;
     }
 }
 
+// Cloud Sync Manager - keeps existing localStorage backups intact while adding Supabase sync
+class CloudSyncManager {
+    constructor(app) {
+        this.app = app;
+        this.client = null;
+        this.session = null;
+        this.syncTimer = null;
+        this.historySyncTimer = null;
+        this.configKey = 'aquatracker-cloud-config';
+        this.statusKey = 'aquatracker-cloud-status';
+    }
+
+    init() {
+        this.populateConfigUI();
+        this.updateStatus(localStorage.getItem(this.statusKey) || 'Cloud sync not configured. Local backups remain active.');
+        if (this.isConfigured()) {
+            this.restoreSession().catch(() => this.updateAuthStatus(null));
+        } else {
+            this.updateAuthStatus(null);
+        }
+    }
+
+    getConfig() {
+        return {
+            supabaseUrl: AQUATRACKER_CLOUD_CONFIG.supabaseUrl,
+            supabaseAnonKey: AQUATRACKER_CLOUD_CONFIG.supabaseAnonKey,
+            vapidPublicKey: AQUATRACKER_CLOUD_CONFIG.vapidPublicKey
+        };
+    }
+
+    isConfigured() {
+        const config = this.getConfig();
+        return Boolean(config.supabaseUrl && config.supabaseAnonKey && config.vapidPublicKey);
+    }
+
+    populateConfigUI() {
+        const status = document.getElementById('cloud-config-status');
+        if (!status) return;
+        const config = this.getConfig();
+        const missing = [];
+        if (!config.supabaseUrl) missing.push('Supabase URL');
+        if (!config.supabaseAnonKey) missing.push('anon key');
+        if (!config.vapidPublicKey) missing.push('VAPID public key');
+        status.textContent = missing.length ? `Missing ${missing.join(', ')} in config.js` : 'Loaded from config.local.js';
+    }
+
+    saveConfigFromUI() {
+        this.showConfigInstructions();
+    }
+
+    showConfigInstructions() {
+        this.app.showNiceModal('Cloud Config', 'Public browser values load from config.js. Keep VAPID private key, service role key, and cron secret in Supabase secrets.');
+    }
+
+    readAuthFields() {
+        const email = document.getElementById('cloud-email')?.value.trim() || '';
+        const password = document.getElementById('cloud-password')?.value || '';
+        if (!email || !password) {
+            throw new Error('Enter your email and password first.');
+        }
+        return { email, password };
+    }
+
+    updateAuthStatus(user) {
+        const status = document.getElementById('cloud-auth-status');
+        if (status) status.textContent = user?.email ? `Signed in as ${user.email}` : 'Not signed in';
+    }
+
+    async restoreSession() {
+        const client = await this.getClient();
+        const { data } = await client.auth.getSession();
+        this.session = data.session;
+        this.updateAuthStatus(this.session?.user || null);
+        if (this.session?.user) {
+            await this.ensureProfile(this.session.user);
+            this.updateStatus('Cloud account ready. Local data remains on this device until you sync it.');
+        }
+        client.auth.onAuthStateChange((_event, session) => {
+            this.session = session;
+            this.updateAuthStatus(session?.user || null);
+        });
+        return this.session;
+    }
+
+    async signInFromUI() {
+        try {
+            const { email, password } = this.readAuthFields();
+            const client = await this.getClient();
+            const { data, error } = await client.auth.signInWithPassword({ email, password });
+            if (error) throw error;
+            this.session = data.session;
+            await this.ensureProfile(data.user);
+            this.updateAuthStatus(data.user);
+            this.updateStatus('Signed in. You can now sync local data or enable server push.');
+        } catch (error) {
+            this.updateStatus(`Sign in failed: ${error.message}`);
+            this.app.showNiceModal('Sign In Failed', error.message);
+        }
+    }
+
+    async signUpFromUI() {
+        try {
+            const { email, password } = this.readAuthFields();
+            const client = await this.getClient();
+            const { data, error } = await client.auth.signUp({ email, password });
+            if (error) throw error;
+            this.session = data.session;
+            if (data.user) await this.ensureProfile(data.user);
+            this.updateAuthStatus(data.user || null);
+            this.updateStatus(data.session ? 'Account created and signed in.' : 'Account created. Check your email if confirmation is required, then sign in.');
+        } catch (error) {
+            this.updateStatus(`Account creation failed: ${error.message}`);
+            this.app.showNiceModal('Account Creation Failed', error.message);
+        }
+    }
+
+    async signOut() {
+        try {
+            const client = await this.getClient();
+            await client.auth.signOut();
+            this.session = null;
+            this.updateAuthStatus(null);
+            this.updateStatus('Signed out of cloud sync. Local data is still available.');
+        } catch (error) {
+            this.updateStatus(`Sign out failed: ${error.message}`);
+        }
+    }
+
+    async ensureProfile(user) {
+        if (!user) throw new Error('Sign in before using cloud sync.');
+        const client = await this.getClient();
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC';
+        await client.schema('aquatracker').from('profiles').upsert({ id: user.id, email: user.email || null, timezone }, { onConflict: 'id' });
+        await client.schema('aquatracker').from('notification_preferences').upsert({ user_id: user.id, push_enabled: true }, { onConflict: 'user_id' });
+    }
+
+    updateStatus(message) {
+        localStorage.setItem(this.statusKey, message);
+        const status = document.getElementById('cloud-sync-status');
+        if (status) status.textContent = message;
+    }
+
+    async loadSupabaseSDK() {
+        if (window.supabase?.createClient) return;
+        await new Promise((resolve, reject) => {
+            const existing = document.querySelector('script[data-supabase-sdk]');
+            if (existing) {
+                existing.addEventListener('load', resolve, { once: true });
+                existing.addEventListener('error', reject, { once: true });
+                return;
+            }
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+            script.defer = true;
+            script.dataset.supabaseSdk = 'true';
+            script.onload = resolve;
+            script.onerror = reject;
+            document.head.appendChild(script);
+        });
+    }
+
+    async getClient() {
+        if (this.client) return this.client;
+        const config = this.getConfig();
+        if (!config.supabaseUrl || !config.supabaseAnonKey) {
+            throw new Error('Cloud sync is not configured.');
+        }
+        await this.loadSupabaseSDK();
+        this.client = window.supabase.createClient(config.supabaseUrl, config.supabaseAnonKey, {
+            auth: { persistSession: true, autoRefreshToken: true }
+        });
+        return this.client;
+    }
+
+    async ensureUser() {
+        const client = await this.getClient();
+        const { data } = await client.auth.getSession();
+        const session = data.session || this.session;
+        if (!session?.user) {
+            this.updateAuthStatus(null);
+            throw new Error('Sign in before using cloud sync or server push.');
+        }
+        this.session = session;
+        await this.ensureProfile(session.user);
+        this.updateAuthStatus(session.user);
+        return session.user;
+    }
+
+    expectedLifetimeDays(filter) {
+        if (filter.installDate && filter.nextDueDate) {
+            const start = Date.parse(`${filter.installDate}T00:00:00`);
+            const end = Date.parse(`${filter.nextDueDate}T00:00:00`);
+            if (!Number.isNaN(start) && !Number.isNaN(end) && end > start) {
+                return Math.max(1, Math.round((end - start) / 86400000));
+            }
+        }
+        return Math.max(1, Math.round((Number(filter.replacementInterval) || 1) * 30.4375));
+    }
+
+    filterPayload(filter, userId) {
+        const settings = filter.notificationSettings || {};
+        return {
+            user_id: userId,
+            legacy_local_id: filter.id,
+            name: filter.name,
+            location: filter.location || null,
+            stage: filter.stage || null,
+            filter_type: filter.type || 'Other',
+            brand: filter.brand || null,
+            model: filter.model || null,
+            installed_date: filter.installDate,
+            expected_lifetime_days: this.expectedLifetimeDays(filter),
+            replacement_interval_months: Number(filter.replacementInterval) || null,
+            expected_replacement_date: filter.nextDueDate,
+            purchase_reminder_lead_days: Number(settings.buyReminder?.timing ?? 14),
+            replacement_status: filter.isActive === false ? 'disabled' : 'active',
+            last_replaced_date: filter.lastReplacedDate || null,
+            cost: Number(filter.cost) || 0,
+            notes: filter.notes || null,
+            reminders_enabled: settings.buyReminder?.enabled !== false || settings.replaceReminder?.enabled !== false || settings.criticalReminder?.enabled === true,
+            notification_settings: settings
+        };
+    }
+
+    async migrateLocalData() {
+        try {
+            this.updateStatus('Creating a local backup before cloud migration...');
+            await this.app.backupManager.performBackup();
+            const user = await this.ensureUser();
+            const client = await this.getClient();
+
+            const filterPayloads = this.app.filters.map(filter => this.filterPayload(filter, user.id));
+            if (filterPayloads.length) {
+                const { data, error } = await client
+                    .schema('aquatracker').from('filters')
+                    .upsert(filterPayloads, { onConflict: 'user_id,legacy_local_id' })
+                    .select('id, legacy_local_id');
+                if (error) throw error;
+                const cloudIds = new Map((data || []).map(row => [row.legacy_local_id, row.id]));
+                this.app.filters.forEach(filter => {
+                    if (cloudIds.has(filter.id)) filter.cloudId = cloudIds.get(filter.id);
+                });
+                localStorage.setItem('waterFilters', JSON.stringify(this.app.filters));
+            }
+
+            await this.syncHistoryNow(user.id);
+            this.updateStatus(`Cloud migration complete: ${this.app.filters.length} filters and ${this.app.history.length} history rows synced.`);
+        } catch (error) {
+            this.updateStatus(`Cloud migration failed: ${error.message}`);
+            throw error;
+        }
+    }
+
+    queueFiltersSync() {
+        if (!this.isConfigured()) return;
+        clearTimeout(this.syncTimer);
+        this.syncTimer = setTimeout(() => this.syncFiltersNow().catch(error => this.updateStatus(`Filter cloud sync failed: ${error.message}`)), 1200);
+    }
+
+    queueHistorySync() {
+        if (!this.isConfigured()) return;
+        clearTimeout(this.historySyncTimer);
+        this.historySyncTimer = setTimeout(() => this.syncHistoryNow().catch(error => this.updateStatus(`History cloud sync failed: ${error.message}`)), 1200);
+    }
+
+    async syncFiltersNow() {
+        const user = await this.ensureUser();
+        const client = await this.getClient();
+        const payloads = this.app.filters.map(filter => this.filterPayload(filter, user.id));
+        if (!payloads.length) return;
+        const { data, error } = await client.schema('aquatracker').from('filters').upsert(payloads, { onConflict: 'user_id,legacy_local_id' }).select('id, legacy_local_id');
+        if (error) throw error;
+        const cloudIds = new Map((data || []).map(row => [row.legacy_local_id, row.id]));
+        this.app.filters.forEach(filter => {
+            if (cloudIds.has(filter.id)) filter.cloudId = cloudIds.get(filter.id);
+        });
+        localStorage.setItem('waterFilters', JSON.stringify(this.app.filters));
+        this.updateStatus('Filters synced to cloud. Local copy preserved.');
+    }
+
+    async syncHistoryNow(existingUserId) {
+        const user = existingUserId ? { id: existingUserId } : await this.ensureUser();
+        const client = await this.getClient();
+        const filterRows = await client.schema('aquatracker').from('filters').select('id, legacy_local_id').eq('user_id', user.id);
+        if (filterRows.error) throw filterRows.error;
+        const filterIdByLegacy = new Map((filterRows.data || []).map(row => [row.legacy_local_id, row.id]));
+        const payloads = this.app.history.map(item => ({
+            user_id: user.id,
+            filter_id: filterIdByLegacy.get(item.filterId) || null,
+            legacy_local_id: item.id,
+            replaced_on: item.date,
+            cost: Number(item.cost) || 0,
+            notes: item.notes || null,
+            log_type: item.type || 'replacement'
+        }));
+        if (!payloads.length) return;
+        const { error } = await client.schema('aquatracker').from('filter_replacement_logs').upsert(payloads, { onConflict: 'user_id,legacy_local_id' });
+        if (error) throw error;
+        this.updateStatus('Replacement history synced to cloud. Local copy preserved.');
+    }
+
+    async markFilterReplaced(filter, historyItem) {
+        if (!this.isConfigured()) return;
+        try {
+            await this.syncFiltersNow();
+            await this.syncHistoryNow();
+            this.updateStatus(`Cloud reminders reset for ${filter.name}.`);
+        } catch (error) {
+            this.updateStatus(`Cloud replacement reset failed: ${error.message}`);
+        }
+    }
+
+    async getAccessToken() {
+        const client = await this.getClient();
+        const { data } = await client.auth.getSession();
+        const token = data.session?.access_token || this.session?.access_token;
+        if (!token) throw new Error('Missing cloud auth token.');
+        return token;
+    }
+}
 // Push Notification Manager Class
 class PushNotificationManager {
     constructor(app) {
@@ -1769,30 +2130,96 @@ class PushNotificationManager {
     }
 
     async subscribe() {
-        // For now, just enable browser notifications
-        this.updateUI(true);
-        return true;
-    }
+        if (!this.isSupported) {
+            this.app.showNiceModal('Push Not Supported', 'This browser does not support Web Push. In-app reminders and local backups still work.');
+            return false;
+        }
 
-    async unsubscribe() {
-        if (!this.subscription) {
-            return;
+        if (!this.app.cloudSyncManager.isConfigured()) {
+            this.app.showNiceModal('Cloud Setup Required', 'Add your Supabase URL, anon key, and VAPID public key in Settings before enabling server-side push.');
+            return false;
         }
 
         try {
-            await this.subscription.unsubscribe();
+            const permission = Notification.permission === 'granted'
+                ? 'granted'
+                : await Notification.requestPermission();
+
+            if (permission !== 'granted') {
+                this.app.showNiceModal('Notifications Disabled', 'Browser notification permission is required for server-side push.');
+                return false;
+            }
+
+            await this.app.cloudSyncManager.migrateLocalData();
+            const registration = await navigator.serviceWorker.ready;
+            const config = this.app.cloudSyncManager.getConfig();
+            this.subscription = await registration.pushManager.subscribe({
+                userVisibleOnly: true,
+                applicationServerKey: this.urlBase64ToUint8Array(config.vapidPublicKey)
+            });
+
+            await this.sendSubscriptionToServer(this.subscription);
+            localStorage.setItem('notifications-enabled', 'true');
+            localStorage.setItem('pushSubscription', JSON.stringify(this.subscription));
+            this.usePushNotifications = true;
+            this.updateUI(true);
+            this.app.cloudSyncManager.updateStatus('Server-side push is active for this browser.');
+            this.app.showNiceModal('Notifications Enabled', 'Server-side push notifications are active. Reminders can be delivered even when the app is closed.');
+            return true;
+        } catch (error) {
+            this.app.cloudSyncManager.updateStatus(`Push subscribe failed: ${error.message}`);
+            this.app.showNiceModal('Push Setup Failed', error.message || 'Could not enable server-side push notifications.');
+            return false;
+        }
+    }
+
+    async unsubscribe() {
+        try {
+            const registration = await navigator.serviceWorker.ready;
+            this.subscription = this.subscription || await registration.pushManager.getSubscription();
+            const endpoint = this.subscription?.endpoint;
+
+            if (this.subscription) {
+                await this.subscription.unsubscribe();
+            }
+
+            if (endpoint && this.app.cloudSyncManager.isConfigured()) {
+                await this.removeSubscriptionFromServer(endpoint);
+            }
+
             this.subscription = null;
             localStorage.removeItem('pushSubscription');
+            localStorage.setItem('notifications-enabled', 'false');
             this.updateUI(false);
-            
+            this.app.cloudSyncManager.updateStatus('Server-side push disabled for this browser.');
         } catch (error) {
-            
+            this.app.cloudSyncManager.updateStatus(`Push unsubscribe failed: ${error.message}`);
         }
     }
 
     async sendSubscriptionToServer(subscription) {
-        // In a real implementation, send to your server
-        
+        const client = await this.app.cloudSyncManager.getClient();
+        const token = await this.app.cloudSyncManager.getAccessToken();
+        const { data, error } = await client.functions.invoke('aquatracker-push-subscriptions', {
+            body: {
+                subscription: subscription.toJSON(),
+                userAgent: navigator.userAgent
+            },
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        if (error) throw error;
+        return data;
+    }
+
+    async removeSubscriptionFromServer(endpoint) {
+        const client = await this.app.cloudSyncManager.getClient();
+        const token = await this.app.cloudSyncManager.getAccessToken();
+        const { error } = await client.functions.invoke('aquatracker-push-subscriptions', {
+            method: 'DELETE',
+            body: { endpoint },
+            headers: { Authorization: `Bearer ${token}` }
+        });
+        if (error) throw error;
     }
 
     handleServiceWorkerMessage(event) {

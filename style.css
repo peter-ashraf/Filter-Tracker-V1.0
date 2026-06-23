@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   /* Primitive Color Tokens */
   --color-white: rgba(255, 255, 255, 1);
   --color-black: rgba(0, 0, 0, 1);
@@ -856,7 +856,11 @@ body {
 }
 
 .logo {
-  font-size: var(--font-size-4xl);
+  width: 2.5rem;
+  height: 2.5rem;
+  border-radius: 0.625rem;
+  object-fit: cover;
+  flex: 0 0 auto;
   filter: drop-shadow(0 2px 4px rgba(33, 128, 133, 0.3));
 }
 
@@ -1178,7 +1182,7 @@ body {
 
 .tab-buttons {
   display: flex;
-  overflow-x: auto;
+  overflow-x: visible;
   padding: var(--space-8) 0;
   gap: var(--space-4);
 }
@@ -1196,7 +1200,7 @@ body {
   border-radius: var(--radius-base);
   transition: all var(--duration-fast) var(--ease-standard);
   white-space: nowrap;
-  min-width: fit-content;
+  min-width: 0;
   font-size: var(--font-size-sm);
 }
 
@@ -1216,6 +1220,47 @@ body {
 
 .tab-label {
   font-size: var(--font-size-sm);
+}
+
+
+
+@media (max-width: 600px) {
+  .tab-navigation {
+    top: 73px;
+  }
+
+  .tab-buttons {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: var(--space-4);
+    overflow-x: visible;
+    padding: var(--space-6) 0;
+  }
+
+  .tab-btn {
+    min-width: 0;
+    width: 100%;
+    padding: var(--space-8) var(--space-4);
+    flex-direction: column;
+    justify-content: center;
+    gap: var(--space-2);
+    white-space: normal;
+    line-height: 1.1;
+    text-align: center;
+  }
+
+  .tab-icon {
+    font-size: var(--font-size-base);
+    line-height: 1;
+  }
+
+  .tab-label {
+    display: block;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+    font-size: 0.7rem;
+    line-height: 1.1;
+  }
 }
 
 /* Tab Content */
@@ -2272,4 +2317,27 @@ html[data-theme="dark"] .history-date {
 html[data-theme="dark"] .detail-label,
 html[data-theme="dark"] .history-type {
   color: var(--text-muted) !important;
+}
+.settings-help {
+  color: var(--text-muted);
+  font-size: 0.875rem;
+  line-height: 1.5;
+  margin: 0.5rem 0 1rem;
+}
+
+.cloud-status-panel {
+  margin: 1rem 0;
+}
+
+#cloud-sync-status {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+}
+
+.cloud-auth-form {
+  margin: var(--space-16) 0;
+}
+
+.cloud-auth-form .form-row {
+  align-items: end;
 }

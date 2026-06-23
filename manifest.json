@@ -1,68 +1,67 @@
 {
-  "name": "AquaTracker - Water Filter Manager",
-  "short_name": "AquaTracker",
-  "description": "Track and manage your water filter cartridge replacements with smart notifications and offline support",
-  "start_url": "./",
-  "display": "standalone",
-  "background_color": "#218085",
-  "theme_color": "#218085",
-  "orientation": "portrait-primary",
-  "categories": ["utilities", "productivity", "health"],
-  "lang": "en",
-  "dir": "ltr",
-  "scope": "./",
-  "icons": [
-    {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 72 72'%3E%3Crect width='72' height='72' rx='12' fill='%23218085'/%3E%3Ctext x='36' y='45' font-size='36' fill='white' text-anchor='middle'%3E%F0%9F%93%A7%3C/text%3E%3C/svg%3E",
-      "sizes": "72x72",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='16' fill='%23218085'/%3E%3Ctext x='48' y='58' font-size='48' fill='white' text-anchor='middle'%3E%F0%9F%93%A7%3C/text%3E%3C/svg%3E",
-      "sizes": "96x96",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 144 144'%3E%3Crect width='144' height='144' rx='24' fill='%23218085'/%3E%3Ctext x='72' y='86' font-size='72' fill='white' text-anchor='middle'%3E%F0%9F%93%A7%3C/text%3E%3C/svg%3E",
-      "sizes": "144x144",
-      "type": "image/svg+xml",
-      "purpose": "any"
-    },
-    {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' rx='32' fill='%23218085'/%3E%3Ctext x='96' y='115' font-size='96' fill='white' text-anchor='middle'%3E%F0%9F%93%A7%3C/text%3E%3C/svg%3E",
-      "sizes": "192x192",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    },
-    {
-      "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' rx='84' fill='%23218085'/%3E%3Ctext x='256' y='306' font-size='256' fill='white' text-anchor='middle'%3E%F0%9F%93%A7%3C/text%3E%3C/svg%3E",
-      "sizes": "512x512",
-      "type": "image/svg+xml",
-      "purpose": "any maskable"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Add Filter",
-      "short_name": "Add",
-      "description": "Add a new water filter to track",
-      "url": "./index.html#add",
-      "icons": [
-        {
-          "src": "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 96 96'%3E%3Crect width='96' height='96' rx='16' fill='%23218085'/%3E%3Cline x1='48' y1='30' x2='48' y2='66' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3Cline x1='30' y1='48' x2='66' y2='48' stroke='white' stroke-width='4' stroke-linecap='round'/%3E%3C/svg%3E",
-          "sizes": "96x96"
-        }
-      ]
-    }
-  ],
-  "prefer_related_applications": false,
-  "id": "aquatracker-pwa",
-  "launch_handler": {
-    "client_mode": "navigate-new"
-  },
-  "edge_side_panel": {
-    "preferred_width": 400
-  }
+    "name":  "AquaTracker - Water Filter Manager",
+    "short_name":  "AquaTracker",
+    "description":  "Track and manage your water filter cartridge replacements with smart notifications and offline support",
+    "start_url":  "./",
+    "display":  "standalone",
+    "background_color":  "#218085",
+    "theme_color":  "#218085",
+    "orientation":  "portrait-primary",
+    "categories":  [
+                       "utilities",
+                       "productivity",
+                       "health"
+                   ],
+    "lang":  "en",
+    "dir":  "ltr",
+    "scope":  "./",
+    "icons":  [
+                  {
+                      "src":  "icons/icon-180.png",
+                      "sizes":  "180x180",
+                      "type":  "image/png",
+                      "purpose":  "any"
+                  },
+                  {
+                      "src":  "icons/icon-192.png",
+                      "sizes":  "192x192",
+                      "type":  "image/png",
+                      "purpose":  "any maskable"
+                  },
+                  {
+                      "src":  "icons/icon-512.png",
+                      "sizes":  "512x512",
+                      "type":  "image/png",
+                      "purpose":  "any maskable"
+                  },
+                  {
+                      "src":  "icons/icon-1024.png",
+                      "sizes":  "1024x1024",
+                      "type":  "image/png",
+                      "purpose":  "any"
+                  }
+              ],
+    "shortcuts":  [
+                      {
+                          "name":  "Add Filter",
+                          "short_name":  "Add",
+                          "description":  "Add a new water filter to track",
+                          "url":  "./index.html#add",
+                          "icons":  [
+                                        {
+                                            "src":  "icons/icon-192.png",
+                                            "sizes":  "192x192",
+                                            "type":  "image/png"
+                                        }
+                                    ]
+                      }
+                  ],
+    "prefer_related_applications":  false,
+    "id":  "aquatracker-pwa",
+    "launch_handler":  {
+                           "client_mode":  "navigate-new"
+                       },
+    "edge_side_panel":  {
+                            "preferred_width":  400
+                        }
 }

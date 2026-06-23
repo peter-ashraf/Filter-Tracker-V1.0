@@ -1,0 +1,11 @@
+﻿# Local runtime config. Keep real project values out of git.
+config.local.js
+.env
+.env.*
+!.env.example
+
+# Dependencies / logs
+node_modules/
+npm-debug.log*
+
+supabase/.temp/
