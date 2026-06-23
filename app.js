@@ -719,7 +719,10 @@ class AquaTracker {
         const confirmOk = document.getElementById('confirm-ok');
         const confirmCancel = document.getElementById('confirm-cancel');
         if (confirmOk) confirmOk.addEventListener('click', () => this.handleConfirmOk());
-        if (confirmCancel) confirmCancel.addEventListener('click', () => this.closeModal('confirm-modal'));
+        if (confirmCancel) confirmCancel.addEventListener('click', () => {
+            this.pendingConfirmCallback = null;
+            this.closeModal('confirm-modal');
+        });
 
         const notificationEnable = document.getElementById('notification-enable');
         const notificationCancel = document.getElementById('notification-cancel');
@@ -776,6 +779,17 @@ class AquaTracker {
             titleElement.textContent = title;
             bodyElement.innerHTML = `<p>${message}</p>`;
             modal.style.display = 'flex';
+        }
+    }
+
+    showConfirmModal(message, callback) {
+        const modal = document.getElementById('confirm-modal');
+        const messageElement = document.getElementById('confirm-message');
+        
+        if (modal && messageElement) {
+            messageElement.textContent = message;
+            this.pendingConfirmCallback = callback;
+            this.showModal('confirm-modal');
         }
     }
 
@@ -1388,8 +1402,10 @@ Note: Some browsers may require you to clear site data completely.`);
             this.updateStats();
             this.renderFilters();
             this.pendingDeleteId = null;
-            
-            
+        }
+        if (this.pendingConfirmCallback) {
+            this.pendingConfirmCallback();
+            this.pendingConfirmCallback = null;
         }
         this.closeModal('confirm-modal');
     }
@@ -1612,12 +1628,11 @@ Note: Some browsers may require you to clear site data completely.`);
     }
 
     clearHistory() {
-        if (confirm('Are you sure you want to clear all history? This cannot be undone.')) {
+        this.showConfirmModal('Are you sure you want to clear all history? This cannot be undone.', () => {
             this.history = [];
             this.saveHistory();
             this.renderHistory();
-            
-        }
+        });
     }
 
     // Statistics Management
@@ -1788,13 +1803,12 @@ Note: Some browsers may require you to clear site data completely.`);
             try {
                 const data = JSON.parse(e.target.result);
                 
-                if (confirm('This will replace all current data. Are you sure?')) {
+                this.showConfirmModal('This will replace all current data. Are you sure?', async () => {
                     // Use backup manager to restore data with validation
                     await this.backupManager.restoreFromBackup(data);
                     
                     this.showNiceModal('Import Complete', 'Data imported successfully. All filters and history have been restored.');
-                    
-                }
+                });
             } catch (error) {
                 this.showNiceModal('Import Error', error.message || 'Invalid file format. Please select a valid AquaTracker backup file.');
                 
@@ -1806,12 +1820,12 @@ Note: Some browsers may require you to clear site data completely.`);
     }
 
     confirmResetData() {
-        if (confirm('⚠️ This will delete all filters, history, notification settings, and preferences. This cannot be undone. Are you sure?')) {
-            if (confirm('🚨 Are you absolutely sure? This will permanently delete everything including all advanced notification configurations.')) {
+        this.showConfirmModal('⚠️ This will delete all filters, history, notification settings, and preferences. This cannot be undone. Are you sure?', () => {
+            this.showConfirmModal('🚨 Are you absolutely sure? This will permanently delete everything including all advanced notification configurations.', () => {
                 localStorage.clear();
                 location.reload();
-            }
-        }
+            });
+        });
     }
 
     // PWA Features
@@ -2267,7 +2281,10 @@ class CloudSyncManager {
 
     async restoreCloudData() {
         try {
-            if (!confirm('Restore cloud data onto this device? A local backup will be created first, then current local filters and history will be replaced.')) return;
+            const confirmed = await new Promise(resolve => {
+                this.app.showConfirmModal('Restore cloud data onto this device? A local backup will be created first, then current local filters and history will be replaced.', () => resolve(true));
+            });
+            if (!confirmed) return;
             this.updateStatus('Creating a local backup before cloud restore...');
             await this.app.backupManager.performBackup();
             const user = await this.ensureUser();
