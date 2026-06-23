@@ -1559,6 +1559,7 @@ Note: Some browsers may require you to clear site data completely.`);
                 currency: this.currency
             },
             metadata: {
+                timestamp: new Date().toISOString(),
                 exported: new Date().toISOString(),
                 version: '3.1.0',
                 type: 'manual',
@@ -1595,15 +1596,11 @@ Note: Some browsers may require you to clear site data completely.`);
                     // Use backup manager to restore data with validation
                     await this.backupManager.restoreFromBackup(data);
                     
-                    // Show success notification
-                    new Notification('✅ AquaTracker', {
-                        body: 'Data imported successfully! All filters and history have been restored.'
-                    });
-                    
+                    this.showNiceModal('Import Complete', 'Data imported successfully. All filters and history have been restored.');
                     
                 }
             } catch (error) {
-                this.showNiceModal('Import Error', '❌ Invalid file format. Please select a valid AquaTracker backup file.');
+                this.showNiceModal('Import Error', error.message || 'Invalid file format. Please select a valid AquaTracker backup file.');
                 
             }
         };
@@ -2617,11 +2614,12 @@ class BackupManager {
     }
 
     validateBackup(backup) {
-        return backup && 
-               backup.filters && 
-               Array.isArray(backup.filters) && 
-               backup.metadata &&
-               backup.metadata.timestamp;
+        if (!backup || !Array.isArray(backup.filters)) return false;
+        if (backup.history && !Array.isArray(backup.history)) return false;
+        if (!backup.metadata || typeof backup.metadata !== 'object') return false;
+
+        const exportedAt = backup.metadata.timestamp || backup.metadata.exported;
+        return Boolean(exportedAt && !Number.isNaN(Date.parse(exportedAt)));
     }
 }
 
