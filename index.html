@@ -4,22 +4,22 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AquaTracker - Water Filter Manager</title>
-    
+
     <!-- PWA Meta Tags -->
     <meta name="description" content="Track your water filter replacements with smart notifications">
     <meta name="theme-color" content="#218085">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="AquaTracker">
-    
+
     <!-- PWA Manifest -->
     <link rel="manifest" href="./manifest.json">
     <link rel="apple-touch-icon" sizes="180x180" href="./icons/icon-180.png">
     <link rel="apple-touch-icon" sizes="192x192" href="./icons/icon-192.png">
-    
+
     <!-- Icons -->
     <link rel="icon" type="image/png" sizes="192x192" href="./icons/icon-192.png">
-    
+
     <link rel="stylesheet" href="./style.css">
     <script src="./config.js"></script>
     <script src="./config.local.js"></script>
@@ -30,56 +30,45 @@
         <div class="header-content">
             <div class="logo-section">
                 <img class="logo" src="./icons/icon-192.png" alt="AquaTracker" width="40" height="40">
-                <h1 class="app-title">AquaTracker</h1>
+                <div>
+                    <h1 class="app-title">AquaTracker</h1>
+                    <p class="app-subtitle">Water system care</p>
+                </div>
             </div>
             <div class="header-controls">
-                <button id="notification-toggle" class="icon-btn" title="Toggle Notifications">
+                <button id="notification-toggle" class="icon-btn app-icon-btn" title="Notifications" aria-label="Notifications">
                     <span class="notification-icon"></span>
                 </button>
-                
-                <!-- From Uiverse.io by Galahhad --> 
-                <label class="theme-switch">
-                  <input type="checkbox" class="theme-switch__checkbox">
-                  <div class="theme-switch__container">
-                    <div class="theme-switch__clouds"></div>
-                    <div class="theme-switch__stars-container">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 144 55" fill="none">
-                        <path fill-rule="evenodd" clip-rule="evenodd" d="M135.831 3.00688C135.055 3.85027 134.111 4.29946 133 4.35447C134.111 4.40947 135.055 4.85867 135.831 5.71123C136.607 6.55462 136.996 7.56303 136.996 8.72727C136.996 7.95722 137.172 7.25134 137.525 6.59129C137.886 5.93124 138.372 5.39954 138.98 5.00535C139.598 4.60199 140.268 4.39114 141 4.35447C139.88 4.2903 138.936 3.85027 138.16 3.00688C137.384 2.16348 136.996 1.16425 136.996 0C136.996 1.16425 136.607 2.16348 135.831 3.00688ZM31 23.3545C32.1114 23.2995 33.0551 22.8503 33.8313 22.0069C34.6075 21.1635 34.9956 20.1642 34.9956 19C34.9956 20.1642 35.3837 21.1635 36.1599 22.0069C36.9361 22.8503 37.8798 23.2903 39 23.3545C38.2679 23.3911 37.5976 23.602 36.9802 24.0053C36.3716 24.3995 35.8864 24.9312 35.5248 25.5913C35.172 26.2513 34.9956 26.9572 34.9956 27.7273C34.9956 26.563 34.6075 25.5546 33.8313 24.7112C33.0551 23.8587 32.1114 23.4095 31 23.3545ZM0 36.3545C1.11136 36.2995 2.05513 35.8503 2.83131 35.0069C3.6075 34.1635 3.99559 33.1642 3.99559 32C3.99559 33.1642 4.38368 34.1635 5.15987 35.0069C5.93605 35.8503 6.87982 36.2903 8 36.3545C7.26792 36.3911 6.59757 36.602 5.98015 37.0053C5.37155 37.3995 4.88644 37.9312 4.52481 38.5913C4.172 39.2513 3.99559 39.9572 3.99559 40.7273C3.99559 39.563 3.6075 38.5546 2.83131 37.7112C2.05513 36.8587 1.11136 36.4095 0 36.3545ZM56.8313 24.0069C56.0551 24.8503 55.1114 25.2995 54 25.3545C55.1114 25.4095 56.0551 25.8587 56.8313 26.7112C57.6075 27.5546 57.9956 28.563 57.9956 29.7273C57.9956 28.9572 58.172 28.2513 58.5248 27.5913C58.8864 26.9312 59.3716 26.3995 59.9802 26.0053C60.5976 25.602 61.2679 25.3911 62 25.3545C60.8798 25.2903 59.9361 24.8503 59.1599 24.0069C58.3837 23.1635 57.9956 22.1642 57.9956 21C57.9956 22.1642 57.6075 23.1635 56.8313 24.0069ZM81 25.3545C82.1114 25.2995 83.0551 24.8503 83.8313 24.0069C84.6075 23.1635 84.9956 22.1642 84.9956 21C84.9956 22.1642 85.3837 23.1635 86.1599 24.0069C86.9361 24.8503 87.8798 25.2903 89 25.3545C88.2679 25.3911 87.5976 25.602 86.9802 26.0053C86.3716 26.3995 85.8864 26.9312 85.5248 27.5913C85.172 28.2513 84.9956 28.9572 84.9956 29.7273C84.9956 28.563 84.6075 27.5546 83.8313 26.7112C83.0551 25.8587 82.1114 25.4095 81 25.3545ZM136 36.3545C137.111 36.2995 138.055 35.8503 138.831 35.0069C139.607 34.1635 139.996 33.1642 139.996 32C139.996 33.1642 140.384 34.1635 141.16 35.0069C141.936 35.8503 142.88 36.2903 144 36.3545C143.268 36.3911 142.598 36.602 141.98 37.0053C141.372 37.3995 140.886 37.9312 140.525 38.5913C140.172 39.2513 139.996 39.9572 139.996 40.7273C139.996 39.563 139.607 38.5546 138.831 37.7112C138.055 36.8587 137.111 36.4095 136 36.3545ZM101.831 49.0069C101.055 49.8503 100.111 50.2995 99 50.3545C100.111 50.4095 101.055 50.8587 101.831 51.7112C102.607 52.5546 102.996 53.563 102.996 54.7273C102.996 53.9572 103.172 53.2513 103.525 52.5913C103.886 51.9312 104.372 51.3995 104.98 51.0053C105.598 50.602 106.268 50.3911 107 50.3545C105.88 50.2903 104.936 49.8503 104.16 49.0069C103.384 48.1635 102.996 47.1642 102.996 46C102.996 47.1642 102.607 48.1635 101.831 49.0069Z" fill="currentColor"></path>
-                      </svg>
-                    </div>
-                    <div class="theme-switch__circle-container">
-                      <div class="theme-switch__sun-moon-container">
-                        <div class="theme-switch__moon">
-                          <div class="theme-switch__spot"></div>
-                          <div class="theme-switch__spot"></div>
-                          <div class="theme-switch__spot"></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                <label class="theme-switch compact-theme-switch" title="Theme">
+                    <input type="checkbox" class="theme-switch__checkbox" aria-label="Toggle theme">
+                    <span class="theme-dot" aria-hidden="true"></span>
                 </label>
             </div>
         </div>
     </header>
 
     <!-- Navigation Tabs -->
-    <nav class="tab-navigation">
+    <nav class="tab-navigation" aria-label="Main navigation">
         <div class="container">
             <div class="tab-buttons">
-                <button class="tab-btn active" data-tab="dashboard">
-                    <span class="tab-icon">🏠</span>
-                    <span class="tab-label">Dashboard</span>
+                <button class="tab-btn active" data-tab="dashboard" aria-label="Home">
+                    <span class="nav-icon nav-icon-home" aria-hidden="true"></span>
+                    <span class="tab-label">Home</span>
                 </button>
-                <button class="tab-btn" data-tab="history">
-                    <span class="tab-icon">📋</span>
+                <button class="tab-btn" data-tab="filters" aria-label="Filters">
+                    <span class="nav-icon nav-icon-filters" aria-hidden="true"></span>
+                    <span class="tab-label">Filters</span>
+                </button>
+                <button class="tab-btn" data-tab="history" aria-label="History">
+                    <span class="nav-icon nav-icon-history" aria-hidden="true"></span>
                     <span class="tab-label">History</span>
                 </button>
-                <button class="tab-btn" data-tab="statistics">
-                    <span class="tab-icon">📊</span>
-                    <span class="tab-label">Statistics</span>
+                <button class="tab-btn" data-tab="statistics" aria-label="Insights">
+                    <span class="nav-icon nav-icon-insights" aria-hidden="true"></span>
+                    <span class="tab-label">Insights</span>
                 </button>
-                <button class="tab-btn" data-tab="settings">
-                    <span class="tab-icon">⚙️</span>
+                <button class="tab-btn" data-tab="settings" aria-label="Settings">
+                    <span class="nav-icon nav-icon-settings" aria-hidden="true"></span>
                     <span class="tab-label">Settings</span>
                 </button>
             </div>
@@ -89,41 +78,80 @@
     <!-- Main Content -->
     <main class="main-content">
         <div class="container">
-            
-            <!-- Dashboard Tab -->
+
+            <!-- Home Tab -->
             <div id="dashboard-tab" class="tab-content active">
-                <!-- Stats -->
-                <div class="stats-grid">
-                    <div class="stat-card">
-                        <div class="stat-number" id="total-filters">7</div>
-                        <div class="stat-label">Total Filters</div>
+                <section class="health-hero" aria-labelledby="home-title">
+                    <div class="health-hero-main">
+                        <p class="eyebrow">Water System Health</p>
+                        <h2 id="home-title"><span id="system-health-score">--</span></h2>
+                        <p id="system-summary-text" class="health-message">Loading system status...</p>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-number overdue" id="overdue-filters">6</div>
-                        <div class="stat-label">Overdue</div>
+                    <div class="health-counts" aria-label="Filter status counts">
+                        <div><strong id="overdue-filters">0</strong><span>Overdue</span></div>
+                        <div><strong id="due-soon-filters">0</strong><span>Due Soon</span></div>
+                        <div><strong id="good-filters">0</strong><span>Good</span></div>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-number due-soon" id="due-soon-filters">0</div>
-                        <div class="stat-label">Due Soon</div>
+                    <div id="system-health-card" class="system-health-card sr-status">
+                        <span class="health-label">System health</span>
+                        <span id="system-health-caption">Checking stages</span>
                     </div>
-                    <div class="stat-card">
-                        <div class="stat-number good" id="good-filters">1</div>
-                        <div class="stat-label">Good</div>
-                    </div>
-                </div>
+                </section>
 
-                <!-- Action Bar -->
-                <div class="action-bar">
-                    <input type="text" id="search-input" placeholder="Search filters..." class="search-input">
-                    <button id="add-filter-btn" class="btn btn-primary">
-                        <span>➕</span> Add Filter
-                    </button>
-                </div>
+                <section class="home-card stage-map-card">
+                    <div class="section-title-row">
+                        <h3>7-Stage Filter Map</h3>
+                        <span id="total-filters" class="section-count">0</span>
+                    </div>
+                    <div id="system-stage-map" class="stage-dots" aria-label="Filter stage map"></div>
+                    <div class="stage-map-legend">
+                        <span><i class="legend-dot overdue"></i>Overdue</span>
+                        <span><i class="legend-dot due-soon"></i>Due Soon</span>
+                        <span><i class="legend-dot good"></i>Good</span>
+                    </div>
+                </section>
 
-                <!-- Filters Grid -->
-                <div id="filters-grid" class="filters-grid">
-                    <!-- Filters will be rendered here -->
+                <section class="home-card">
+                    <div class="section-title-row">
+                        <h3>Needs Attention</h3>
+                        <button class="link-btn" type="button" data-jump-tab="filters">View All</button>
+                    </div>
+                    <div id="attention-list" class="attention-list compact-list"></div>
+                </section>
+
+                <section class="home-card">
+                    <div class="section-title-row">
+                        <h3>All Filters</h3>
+                        <button class="link-btn" type="button" data-jump-tab="filters">View All</button>
+                    </div>
+                    <div id="home-filter-preview" class="filter-preview-list"></div>
+                </section>
+
+                <button id="home-add-filter" class="fab" type="button" aria-label="Add filter">+</button>
+
+                <input type="search" id="search-input" class="visually-hidden" aria-hidden="true" tabindex="-1">
+                <div id="filters-grid" class="visually-hidden" aria-hidden="true"></div>
+            </div>
+
+            <!-- Filters Tab -->
+            <div id="filters-tab" class="tab-content">
+                <div class="mobile-page-header">
+                    <div>
+                        <p class="eyebrow">Inventory</p>
+                        <h2>Filters</h2>
+                    </div>
+                    <button id="filters-add-filter" class="icon-add-btn" type="button" aria-label="Add filter">+</button>
                 </div>
+                <div class="filter-tools">
+                    <input type="search" id="filters-search-input" class="search-input" placeholder="Search filters">
+                    <div class="filter-chip-row" role="tablist" aria-label="Filter status">
+                        <button class="filter-chip active" type="button" data-filter-status="all">All</button>
+                        <button class="filter-chip" type="button" data-filter-status="overdue">Overdue</button>
+                        <button class="filter-chip" type="button" data-filter-status="due-soon">Due Soon</button>
+                        <button class="filter-chip" type="button" data-filter-status="good">Good</button>
+                    </div>
+                </div>
+                <div id="filters-list" class="filters-mobile-list"></div>
             </div>
 
             <!-- History Tab -->
@@ -132,14 +160,14 @@
                     <h2>Replacement History</h2>
                     <div class="header-actions">
                         <button id="export-history" class="btn btn-secondary btn-sm">
-                            <span>📥</span> Export
+                            <span class="btn-icon btn-icon-export" aria-hidden="true"></span> Export
                         </button>
                         <button id="clear-history" class="btn btn-outline btn-sm">
-                            <span>🗑️</span> Clear
+                            <span class="btn-icon btn-icon-trash" aria-hidden="true"></span> Clear
                         </button>
                     </div>
                 </div>
-                
+
                 <div class="history-filters">
                     <select id="history-filter" class="form-control">
                         <option value="all">All History</option>
@@ -157,27 +185,27 @@
             <!-- Statistics Tab -->
             <div id="statistics-tab" class="tab-content">
                 <div class="section-header">
-                    <h2>Statistics & Insights</h2>
+                    <h2>Insights</h2>
                 </div>
 
                 <!-- Cost Statistics -->
                 <div class="stats-section">
-                    <h3>💰 Cost Analysis</h3>
+                    <h3>Cost Analysis</h3>
                     <div class="stats-grid">
                         <div class="stat-card">
-                            <div class="stat-number" id="total-cost">ج.م 3,920</div>
+                            <div class="stat-number" id="total-cost">EGP 3,920</div>
                             <div class="stat-label">Total Spent</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-number" id="avg-cost">ج.م 560</div>
+                            <div class="stat-number" id="avg-cost">EGP 560</div>
                             <div class="stat-label">Average Cost</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-number" id="monthly-cost">ج.م 672</div>
+                            <div class="stat-number" id="monthly-cost">EGP 672</div>
                             <div class="stat-label">Monthly Average</div>
                         </div>
                         <div class="stat-card">
-                            <div class="stat-number" id="yearly-projection">ج.م 8,064</div>
+                            <div class="stat-number" id="yearly-projection">EGP 8,064</div>
                             <div class="stat-label">Yearly Projection</div>
                         </div>
                     </div>
@@ -185,7 +213,7 @@
 
                 <!-- Environmental Impact -->
                 <div class="stats-section">
-                    <h3>🌱 Environmental Impact</h3>
+                    <h3>Environmental Impact</h3>
                     <div class="impact-grid">
                         <div class="impact-card">
                             <div class="impact-icon">💧</div>
@@ -213,7 +241,7 @@
 
                 <!-- Filter Performance -->
                 <div class="stats-section">
-                    <h3>📈 Filter Performance</h3>
+                    <h3>Filter Performance</h3>
                     <div class="performance-list" id="performance-list">
                         <!-- Performance items will be rendered here -->
                     </div>
@@ -222,89 +250,53 @@
 
             <!-- Settings Tab -->
             <div id="settings-tab" class="tab-content">
-                <div class="section-header">
-                    <h2>Settings</h2>
+                <div class="mobile-page-header">
+                    <div>
+                        <p class="eyebrow">Preferences</p>
+                        <h2>Settings</h2>
+                    </div>
                 </div>
 
-                <div class="settings-section">
-                    <h3>🎨 Appearance</h3>
-                    <div class="form-group">
-                        <label for="currency-select">Currency</label>
-                        <select id="currency-select" class="form-control">
-                            <option value="USD">USD ($)</option>
-                            <option value="EUR">EUR (€)</option>
-                            <option value="GBP">GBP (£)</option>
-                            <option value="CAD">CAD ($)</option>
-                            <option value="EGP" selected>EGP (ج.م)</option>
+                <div class="settings-section settings-group">
+                    <h3>Appearance</h3>
+                    <div class="settings-row">
+                        <div><strong>Theme</strong><span>Use the header toggle</span></div>
+                        <span class="settings-value" id="theme-mode-label">System</span>
+                    </div>
+                    <label class="settings-row" for="currency-select">
+                        <div><strong>Currency</strong><span>Used for costs and insights</span></div>
+                        <select id="currency-select" class="form-control inline-select">
+                            <option value="USD">USD</option>
+                            <option value="EUR">EUR</option>
+                            <option value="GBP">GBP</option>
+                            <option value="CAD">CAD</option>
+                            <option value="EGP" selected>EGP</option>
                         </select>
+                    </label>
+                </div>
+
+                <div class="settings-section settings-group">
+                    <h3>Notifications</h3>
+                    <div class="settings-row">
+                        <div><strong>Device Notifications</strong><span>Local reminders and permission state</span></div>
+                        <button id="test-notification" class="row-action" type="button">Test</button>
+                    </div>
+                    <div class="settings-row">
+                        <div><strong>Server Push</strong><span>Works when the app is closed</span></div>
+                        <button id="subscribe-cloud-push" class="row-action primary" type="button">Enable</button>
+                    </div>
+                    <div class="settings-row">
+                        <div><strong>Disable Server Push</strong><span>Stop push delivery on this device</span></div>
+                        <button id="unsubscribe-cloud-push" class="row-action" type="button">Disable</button>
                     </div>
                 </div>
 
-                <div class="settings-section">
-                    <h3>📱 Data Management</h3>
-                    <div class="settings-actions">
-                        <button id="export-data" class="btn btn-primary">
-                            <span>📤</span> Export All Data
-                        </button>
-                        <button id="import-data" class="btn btn-secondary">
-                            <span>📥</span> Import Data
-                        </button>
-                        <input type="file" id="import-file" accept=".json" style="display: none;">
-                        <button id="reset-data" class="btn btn-danger">
-                            <span>🗑️</span> Reset All Data
-                        </button>
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <h3>💾 Backup Settings</h3>
-                    <div class="form-group">
-                        <label for="backup-frequency">Automatic Backup Frequency</label>
-                        <select id="backup-frequency" class="form-control">
-                            <option value="disabled">Disabled</option>
-                            <option value="daily" selected>Daily</option>
-                            <option value="weekly">Weekly</option>
-                            <option value="monthly">Monthly</option>
-                        </select>
-                    </div>
-                    
-                    <div class="backup-status">
-                        <div class="status-item">
-                            <span class="status-label">Last backup:</span>
-                            <span class="status-value" id="last-backup-time">Never</span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">Storage used:</span>
-                            <span class="status-value" id="backup-storage">0 MB</span>
-                        </div>
-                    </div>
-                    
-                    <div class="settings-actions">
-                        <button id="manual-backup" class="btn btn-outline">
-                            <span>💾</span> Create Backup Now
-                        </button>
-                        <button id="view-backup-history" class="btn btn-outline">
-                            <span>📜</span> View Backup History
-                        </button>
-                    </div>
-                </div>
-
-                <div class="settings-section">
-                    <h3>Server Push Notifications</h3>
-                    <p class="settings-help">Uses Supabase and Web Push so reminders can be sent even when the app is closed. Existing local backups and exports stay available.</p>
-                    <div class="backup-status cloud-status-panel">
-                        <div class="status-item">
-                            <span class="status-label">Config:</span>
-                            <span class="status-value" id="cloud-config-status">Loaded from config.js</span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">Cloud account:</span>
-                            <span class="status-value" id="cloud-auth-status">Not signed in</span>
-                        </div>
-                        <div class="status-item">
-                            <span class="status-label">Cloud status:</span>
-                            <span class="status-value" id="cloud-sync-status">Cloud sync not configured.</span>
-                        </div>
+                <div class="settings-section settings-group">
+                    <h3>Cloud Sync</h3>
+                    <div class="settings-status-stack">
+                        <div class="status-item"><span class="status-label">Config</span><span class="status-value" id="cloud-config-status">Loaded from config.js</span></div>
+                        <div class="status-item"><span class="status-label">Account</span><span class="status-value" id="cloud-auth-status">Not signed in</span></div>
+                        <div class="status-item"><span class="status-label">Status</span><span class="status-value" id="cloud-sync-status">Cloud sync not configured.</span></div>
                     </div>
                     <div class="cloud-auth-form" id="cloud-auth-form">
                         <div class="form-row">
@@ -317,41 +309,46 @@
                                 <input type="password" id="cloud-password" class="form-control" autocomplete="current-password" placeholder="Password">
                             </div>
                         </div>
-                        <div class="settings-actions">
+                        <div class="settings-actions compact-actions">
                             <button id="cloud-sign-in" class="btn btn-primary" type="button">Sign In</button>
                             <button id="cloud-sign-up" class="btn btn-secondary" type="button">Create Account</button>
                             <button id="cloud-sign-out" class="btn btn-outline" type="button">Sign Out</button>
                         </div>
                     </div>
-                    <div class="settings-actions">
-                        <button id="migrate-cloud-data" class="btn btn-secondary" type="button">Sync Local Data</button>
-                        <button id="subscribe-cloud-push" class="btn btn-primary" type="button">Enable Server Push</button>
-                        <button id="unsubscribe-cloud-push" class="btn btn-outline" type="button">Disable Server Push</button>
+                    <div class="settings-row action-row">
+                        <div><strong>Back Up This Device to Cloud</strong><span>Upload current local filters and history</span></div>
+                        <button id="migrate-cloud-data" class="row-action" type="button">Back Up</button>
                     </div>
-                    <p class="settings-help">Public browser config loads from <code>config.js</code>. Keep VAPID private key, service role key, and cron secret in Supabase secrets.</p>
-                    <p class="settings-help">iPhone/iPad push requires the PWA to be installed to the Home Screen and notification permission granted.</p>
+                    <div class="settings-row action-row">
+                        <div><strong>Restore This Device From Cloud</strong><span>Download cloud data after creating a local backup</span></div>
+                        <button id="restore-cloud-data" class="row-action primary" type="button">Restore</button>
+                    </div>
                 </div>
 
-                <!-- PWA Cache Control for Mobile Theme Fix -->
-                <div class="settings-section">
-                    <h3>🔄 App Updates</h3>
-                    <div class="settings-actions">
-                        <button id="clear-cache-btn" class="btn btn-outline">
-                            <span>🗂️</span> Clear Cache & Refresh
-                        </button>
-                        <button id="check-updates-btn" class="btn btn-outline">
-                            <span>🔍</span> Check for Updates
-                        </button>
-                        <button id="test-notification" class="btn btn-outline">
-                            <span>🔔</span> Test Notification
-                        </button>
-                    </div>
-                    <p style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.5rem;">
-                        Use "Clear Cache" if theme switching doesn't work on mobile PWA
-                    </p>
+                <div class="settings-section settings-group">
+                    <h3>Data</h3>
+                    <div class="settings-row"><div><strong>Export Data</strong><span>Save a JSON backup file</span></div><button id="export-data" class="row-action" type="button">Export</button></div>
+                    <div class="settings-row"><div><strong>Import Data</strong><span>Restore from a backup file</span></div><button id="import-data" class="row-action" type="button">Import</button></div>
+                    <input type="file" id="import-file" accept=".json" style="display: none;">
+                    <label class="settings-row" for="backup-frequency"><div><strong>Automatic Backup</strong><span>Local backup frequency</span></div><select id="backup-frequency" class="form-control inline-select"><option value="disabled">Disabled</option><option value="daily" selected>Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option></select></label>
+                    <div class="settings-row"><div><strong>Create Backup Now</strong><span id="last-backup-time">Last backup: Never</span></div><button id="manual-backup" class="row-action" type="button">Create</button></div>
+                    <div class="settings-row"><div><strong>Backup History</strong><span id="backup-storage">0 MB used</span></div><button id="view-backup-history" class="row-action" type="button">View</button></div>
+                    <div class="settings-row danger-row"><div><strong>Clear All Data</strong><span>Deletes local filters and history</span></div><button id="reset-data" class="row-action danger" type="button">Clear</button></div>
                 </div>
+
+                <div class="settings-section settings-group">
+                    <h3>App</h3>
+                    <div class="settings-row"><div><strong>Check for Updates</strong><span>Refresh app files from cache</span></div><button id="check-updates-btn" class="row-action" type="button">Check</button></div>
+                    <div class="settings-row"><div><strong>Clear Cache & Refresh</strong><span>Use if the installed PWA looks stale</span></div><button id="clear-cache-btn" class="row-action" type="button">Refresh</button></div>
+                    <div class="settings-row"><div><strong>App Version</strong><span>AquaTracker PWA</span></div><span class="settings-value">3.1.0</span></div>
+                </div>
+
+                <details class="settings-section settings-group advanced-settings">
+                    <summary>Advanced / Developer Info</summary>
+                    <p class="settings-help">Public browser config loads from <code>config.js</code>. VAPID private key, service role key, and cron secret must stay in Supabase secrets.</p>
+                    <p class="settings-help">iPhone/iPad push requires the PWA to be installed to the Home Screen and notification permission granted.</p>
+                </details>
             </div>
-            
         </div>
     </main>
 
@@ -432,8 +429,8 @@
 
                 <!-- Advanced Notification Settings -->
                 <div class="notification-settings">
-                    <h4>🔔 Advanced Notification Settings</h4>
-                    
+                    <h4>Reminder rules</h4>
+
                     <!-- Buy Reminders -->
                     <div class="form-group">
                         <label class="checkbox-label">
@@ -441,7 +438,7 @@
                             <span>Enable Buy Reminders</span>
                         </label>
                     </div>
-                    
+
                     <div class="buy-reminder-settings" id="buy-reminder-settings">
                         <div class="form-row">
                             <div class="form-group">
@@ -491,7 +488,7 @@
                             <span>Enable Replace Reminders</span>
                         </label>
                     </div>
-                    
+
                     <div class="replace-reminder-settings" id="replace-reminder-settings">
                         <div class="form-row">
                             <div class="form-group">
@@ -540,7 +537,7 @@
                             <span>Enable Critical Overdue Alerts</span>
                         </label>
                     </div>
-                    
+
                     <div class="critical-reminder-settings" id="critical-reminder-settings" style="display: none;">
                         <div class="form-row">
                             <div class="form-group">
@@ -597,7 +594,7 @@
     <div id="notification-modal" class="modal" style="display: none;">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>🔔 Enable Notifications</h2>
+                <h2>Enable Notifications</h2>
                 <button class="modal-close" id="modal-close-notification">&times;</button>
             </div>
             <div class="modal-body">
@@ -636,7 +633,7 @@
     <!-- Install Prompt -->
     <div id="install-prompt" class="install-banner" style="display: none;">
         <div class="install-content">
-            <span>📱 Install AquaTracker for offline access and notifications</span>
+            <span>Install AquaTracker for offline access and notifications</span>
             <div class="install-actions">
                 <button id="install-btn" class="btn btn-primary btn-sm">Install</button>
                 <button id="install-dismiss" class="btn btn-secondary btn-sm">Later</button>

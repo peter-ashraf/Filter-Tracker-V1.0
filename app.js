@@ -3,25 +3,46 @@
 class ThemeController {
     constructor() {
         this.STORAGE_KEY = 'aquatracker-theme-override';
-        this.currentTheme = null;
-        this.isSystemOverride = false;
+        this.MODES = ['light', 'dark', 'system'];
+        this.currentMode = 'system';
+        this.currentTheme = 'light';
+        this.systemMedia = window.matchMedia ? window.matchMedia('(prefers-color-scheme: dark)') : null;
+        this.handleSystemThemeChange = this.handleSystemThemeChange.bind(this);
+        this.handleToggleClick = this.handleToggleClick.bind(this);
     }
 
     init() {
-        
-        const savedTheme = localStorage.getItem(this.STORAGE_KEY);
-        const initialTheme = savedTheme || 'light';
-        
-        this.forceApplyTheme(initialTheme);
+        const savedTheme = localStorage.getItem(this.STORAGE_KEY) || 'system';
+        this.setMode(this.MODES.includes(savedTheme) ? savedTheme : 'system');
         this.bindToggleEvent();
-        this.disableSystemThemeSync();
+        if (this.systemMedia) {
+            this.systemMedia.addEventListener('change', this.handleSystemThemeChange);
+        }
+    }
+
+    getSystemTheme() {
+        return this.systemMedia?.matches ? 'dark' : 'light';
+    }
+
+    setMode(mode) {
+        this.currentMode = this.MODES.includes(mode) ? mode : 'system';
+        localStorage.setItem(this.STORAGE_KEY, this.currentMode);
+        const appliedTheme = this.currentMode === 'system' ? this.getSystemTheme() : this.currentMode;
+        this.applyTheme(appliedTheme);
+        this.updateToggleState();
     }
 
     forceApplyTheme(theme) {
-        
+        this.setMode(this.MODES.includes(theme) ? theme : 'system');
+    }
+
+    applyTheme(theme) {
+        this.currentTheme = theme;
         document.documentElement.setAttribute('data-theme', theme);
+        document.documentElement.setAttribute('data-theme-mode', this.currentMode);
         document.body.setAttribute('data-theme', theme);
-        
+        document.body.setAttribute('data-theme-mode', this.currentMode);
+
         const root = document.documentElement;
         if (theme === 'dark') {
             root.style.setProperty('--text-primary', '#f9fafb', 'important');
@@ -42,54 +63,56 @@ class ThemeController {
             root.style.setProperty('--border-color', '#e5e7eb', 'important');
             root.style.setProperty('--border-light', '#f3f4f6', 'important');
         }
-        
-        localStorage.setItem(this.STORAGE_KEY, theme);
-        this.currentTheme = theme;
-        this.isSystemOverride = true;
-        
-        this.updateToggleState(theme);
-        document.body.offsetHeight;
     }
 
-    updateToggleState(theme) {
+    updateToggleState() {
         const toggle = document.querySelector('.theme-switch__checkbox');
-        if (toggle) {
-            // Only update if the toggle state doesn't match the theme
-            if (toggle.checked !== (theme === 'dark')) {
-                // Temporarily remove event listener to prevent recursive loop
-                toggle.removeEventListener('change', this.handleToggleChange.bind(this));
-                toggle.checked = (theme === 'dark');
-                // Re-add event listener
-                setTimeout(() => {
-                    toggle.addEventListener('change', this.handleToggleChange.bind(this));
-                }, 0);
-            }
+        const switchEl = document.querySelector('.compact-theme-switch');
+        const label = document.getElementById('theme-mode-label');
+        if (toggle) toggle.checked = this.currentTheme === 'dark';
+        if (switchEl) {
+            switchEl.dataset.mode = this.currentMode;
+            switchEl.title = `Theme: ${this.getModeLabel()}`;
+            switchEl.setAttribute('aria-label', `Theme: ${this.getModeLabel()}`);
         }
+        if (label) label.textContent = this.getModeLabel();
+    }
+
+    getModeLabel() {
+        if (this.currentMode === 'system') return 'System';
+        return this.currentMode === 'dark' ? 'Dark' : 'Light';
     }
 
     toggleTheme() {
-        const newTheme = this.currentTheme === 'light' ? 'dark' : 'light';
-        this.forceApplyTheme(newTheme);
+        const currentIndex = this.MODES.indexOf(this.currentMode);
+        this.setMode(this.MODES[(currentIndex + 1) % this.MODES.length]);
     }
 
     bindToggleEvent() {
-        const toggle = document.querySelector('.theme-switch__checkbox');
-        if (toggle) {
-            toggle.removeEventListener('change', this.handleToggleChange.bind(this));
-            toggle.addEventListener('change', this.handleToggleChange.bind(this));
-        } else {
-            
+        const switchEl = document.querySelector('.compact-theme-switch');
+        if (switchEl) {
+            switchEl.removeEventListener('click', this.handleToggleClick);
+            switchEl.addEventListener('click', this.handleToggleClick);
+            switchEl.setAttribute('role', 'button');
+            switchEl.setAttribute('tabindex', '0');
+            switchEl.addEventListener('keydown', (event) => {
+                if (event.key === 'Enter' || event.key === ' ') {
+                    event.preventDefault();
+                    this.toggleTheme();
+                }
+            });
         }
     }
 
-    handleToggleChange(event) {
+    handleToggleClick(event) {
+        event.preventDefault();
         this.toggleTheme();
     }
 
-    disableSystemThemeSync() {
-        // Remove any system theme detection to prevent conflicts
-        if (window.matchMedia) {
-            window.matchMedia('(prefers-color-scheme: dark)').removeEventListener('change', this.handleSystemThemeChange);
+    handleSystemThemeChange() {
+        if (this.currentMode === 'system') {
+            this.applyTheme(this.getSystemTheme());
+            this.updateToggleState();
         }
     }
 }
@@ -465,6 +488,29 @@ class AquaTracker {
             searchInput.addEventListener('input', (e) => this.searchFilters(e.target.value));
         }
 
+        const filtersSearchInput = document.getElementById('filters-search-input');
+        if (filtersSearchInput) {
+            filtersSearchInput.addEventListener('input', () => this.renderFiltersScreen());
+        }
+
+        document.querySelectorAll('.filter-chip').forEach(chip => {
+            chip.addEventListener('click', () => {
+                document.querySelectorAll('.filter-chip').forEach(item => item.classList.remove('active'));
+                chip.classList.add('active');
+                this.renderFiltersScreen();
+            });
+        });
+
+        document.querySelectorAll('[data-jump-tab]').forEach(button => {
+            button.addEventListener('click', () => this.switchTab(button.dataset.jumpTab));
+        });
+
+        const homeAddFilter = document.getElementById('home-add-filter');
+        if (homeAddFilter) homeAddFilter.addEventListener('click', () => this.showAddFilterModal());
+
+        const filtersAddFilter = document.getElementById('filters-add-filter');
+        if (filtersAddFilter) filtersAddFilter.addEventListener('click', () => this.showAddFilterModal());
+
         // History controls
         const historyFilter = document.getElementById('history-filter');
         if (historyFilter) {
@@ -540,6 +586,11 @@ class AquaTracker {
         const migrateCloudData = document.getElementById('migrate-cloud-data');
         if (migrateCloudData) {
             migrateCloudData.addEventListener('click', () => this.cloudSyncManager.migrateLocalData());
+        }
+
+        const restoreCloudData = document.getElementById('restore-cloud-data');
+        if (restoreCloudData) {
+            restoreCloudData.addEventListener('click', () => this.cloudSyncManager.restoreCloudData());
         }
 
         const subscribeCloudPush = document.getElementById('subscribe-cloud-push');
@@ -756,21 +807,19 @@ class AquaTracker {
     }
 
     formatCurrency(amount) {
-        const symbols = {
-            'USD': '$',
-            'EUR': '€',
-            'GBP': '£',
-            'CAD': '$',
-            'EGP': 'ج.م'
+        const value = Number(amount) || 0;
+        const formatted = value.toLocaleString('en-US', {
+            minimumFractionDigits: Number.isInteger(value) ? 0 : 2,
+            maximumFractionDigits: 2
+        });
+        const codes = {
+            USD: 'USD',
+            EUR: 'EUR',
+            GBP: 'GBP',
+            CAD: 'CAD',
+            EGP: 'EGP'
         };
-        
-        const symbol = symbols[this.currency] || this.currency;
-        
-        if (this.currency === 'EGP') {
-            return `${symbol} ${amount.toLocaleString('ar-EG')}`;
-        } else {
-            return `${symbol}${amount.toLocaleString()}`;
-        }
+        return `${codes[this.currency] || this.currency} ${formatted}`;
     }
 
     // Notification Management
@@ -980,7 +1029,11 @@ Note: Some browsers may require you to clear site data completely.`);
 
         this.currentTab = tabName;
 
-        if (tabName === 'history') {
+        if (tabName === 'dashboard') {
+            this.renderFilters();
+        } else if (tabName === 'filters') {
+            this.renderFiltersScreen();
+        } else if (tabName === 'history') {
             this.renderHistory();
         } else if (tabName === 'statistics') {
             this.renderStatistics();
@@ -989,12 +1042,8 @@ Note: Some browsers may require you to clear site data completely.`);
 
     // Filter Management
     renderFilters() {
-        
         const grid = document.getElementById('filters-grid');
-        if (!grid) {
-            
-            return;
-        }
+        if (!grid) return;
 
         const searchTerm = document.getElementById('search-input')?.value.toLowerCase() || '';
         const filteredFilters = this.filters.filter(filter => 
@@ -1003,28 +1052,126 @@ Note: Some browsers may require you to clear site data completely.`);
             filter.type.toLowerCase().includes(searchTerm)
         );
 
+        this.renderSystemOverview();
+
         if (filteredFilters.length === 0) {
             grid.innerHTML = `
                 <div class="empty-state" style="grid-column: 1 / -1;">
-                    <div class="empty-icon">💧</div>
-                    <h3>No Filters Found</h3>
-                    <p>Try adjusting your search or add a new filter.</p>
+                    <div class="empty-icon">AT</div>
+                    <h3>No stages found</h3>
+                    <p>Try adjusting your search or add a new filter stage.</p>
                 </div>
             `;
             return;
         }
 
         grid.innerHTML = filteredFilters.map(filter => this.createFilterCard(filter)).join('');
-        
-        grid.querySelectorAll('.filter-card').forEach(card => {
+        this.bindFilterCardActions(grid, '.filter-card');
+    }
+
+    renderSystemOverview() {
+        const stageMap = document.getElementById('system-stage-map');
+        const attentionList = document.getElementById('attention-list');
+        const previewList = document.getElementById('home-filter-preview');
+        if (!stageMap || !attentionList) return;
+
+        const filters = this.sortedFilters();
+        const stats = this.calculateStats();
+        const healthScore = document.getElementById('system-health-score');
+        const healthCaption = document.getElementById('system-health-caption');
+        const healthCard = document.getElementById('system-health-card');
+        const summary = document.getElementById('system-summary-text');
+
+        if (healthScore) {
+            healthScore.textContent = stats.overdue ? `${stats.overdue} filter${stats.overdue === 1 ? ' needs' : 's need'} replacement` : stats.dueSoon ? `${stats.dueSoon} due soon` : 'All filters healthy';
+        }
+        if (healthCaption) healthCaption.textContent = stats.overdue ? `${stats.overdue} stage${stats.overdue === 1 ? ' needs' : 's need'} replacement` : 'All active stages are on track';
+        if (healthCard) healthCard.dataset.status = stats.overdue ? 'overdue' : stats.dueSoon ? 'due-soon' : 'good';
+        if (summary) {
+            if (!filters.length) {
+                summary.textContent = 'Add your first filter stage to start tracking the system.';
+            } else if (stats.overdue) {
+                summary.textContent = 'Your water system needs attention. Replace overdue filters to keep water quality stable.';
+            } else if (stats.dueSoon) {
+                summary.textContent = 'Plan purchases now so replacement day does not sneak up on you.';
+            } else {
+                summary.textContent = 'Your system is on schedule. Keep monitoring replacement dates.';
+            }
+        }
+
+        if (!filters.length) {
+            stageMap.innerHTML = '<div class="empty-inline">No stages yet</div>';
+            attentionList.innerHTML = '<div class="attention-empty"><strong>No urgent actions</strong><span>Add filters to begin tracking.</span></div>';
+            if (previewList) previewList.innerHTML = '';
+            return;
+        }
+
+        stageMap.innerHTML = filters.map(filter => this.createStageDot(filter)).join('');
+        this.bindFilterCardActions(stageMap, '.stage-dot');
+
+        const priority = filters
+            .map(filter => ({ filter, status: this.getFilterStatus(filter), days: this.getDaysUntilDue(filter.nextDueDate) }))
+            .filter(item => item.status !== 'good')
+            .sort((a, b) => a.days - b.days)
+            .slice(0, 3);
+
+        attentionList.innerHTML = priority.length ? priority.map(item => this.createAttentionItem(item)).join('') : `
+            <div class="attention-empty">
+                <strong>No urgent actions</strong>
+                <span>Your system is currently on schedule.</span>
+            </div>
+        `;
+        this.bindFilterCardActions(attentionList, '.attention-item');
+
+        if (previewList) {
+            previewList.innerHTML = filters.slice(0, 4).map(filter => this.createFilterRow(filter, { compact: true })).join('');
+            this.bindFilterCardActions(previewList, '.filter-row');
+        }
+    }
+
+    renderFiltersScreen() {
+        const list = document.getElementById('filters-list');
+        if (!list) return;
+
+        const query = document.getElementById('filters-search-input')?.value.toLowerCase().trim() || '';
+        const activeChip = document.querySelector('.filter-chip.active')?.dataset.filterStatus || 'all';
+        let filters = this.sortedFilters().filter(filter => {
+            const matchesSearch = !query || [filter.name, filter.type, filter.stage, filter.location].some(value => String(value || '').toLowerCase().includes(query));
+            const status = this.getFilterStatus(filter);
+            const matchesStatus = activeChip === 'all' || status === activeChip;
+            return matchesSearch && matchesStatus;
+        });
+
+        if (!filters.length) {
+            list.innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">AT</div>
+                    <h3>No filters found</h3>
+                    <p>Try another search or status filter.</p>
+                </div>
+            `;
+            return;
+        }
+
+        list.innerHTML = filters.map(filter => this.createFilterRow(filter)).join('');
+        this.bindFilterCardActions(list, '.filter-row');
+    }
+
+    sortedFilters() {
+        return [...this.filters].sort((a, b) => this.getStageNumber(a) - this.getStageNumber(b));
+    }
+
+    bindFilterCardActions(root, selector) {
+        root.querySelectorAll(selector).forEach(card => {
             const filterId = card.dataset.filterId;
-            
+            if (!filterId) return;
+
             card.addEventListener('click', (e) => {
                 if (!e.target.closest('.filter-actions')) {
                     this.editFilter(filterId);
                 }
             });
-            
+
             const deleteBtn = card.querySelector('.delete-btn');
             if (deleteBtn) {
                 deleteBtn.addEventListener('click', (e) => {
@@ -1041,52 +1188,81 @@ Note: Some browsers may require you to clear site data completely.`);
                 });
             }
         });
+    }
 
-        
+    createStageDot(filter) {
+        const status = this.getFilterStatus(filter);
+        const stageNumber = this.getStageNumber(filter) || '?';
+        const label = this.getStageShortLabel(filter);
+        return `
+            <button class="stage-dot ${status}" data-filter-id="${filter.id}" type="button" aria-label="${filter.name} ${this.getStatusText(status, this.getDaysUntilDue(filter.nextDueDate))}">
+                <span>${stageNumber}</span>
+                <small>${label}</small>
+            </button>
+        `;
+    }
+
+    createAttentionItem({ filter, status, days }) {
+        return `
+            <article class="attention-item ${status}" data-filter-id="${filter.id}">
+                <div class="stage-badge ${status}">${this.getStageNumber(filter) || 'F'}</div>
+                <div class="attention-copy">
+                    <h4>${filter.name}</h4>
+                    <p>${this.getShortStatusText(status, days)} - due ${this.formatDate(filter.nextDueDate)}</p>
+                </div>
+                <div class="filter-actions">
+                    <button class="btn btn-primary btn-sm replace-btn" type="button">Replace</button>
+                </div>
+            </article>
+        `;
+    }
+
+    createFilterRow(filter, options = {}) {
+        const status = this.getFilterStatus(filter);
+        const daysUntilDue = this.getDaysUntilDue(filter.nextDueDate);
+        const progress = this.getFilterProgress(filter, daysUntilDue);
+        const compactClass = options.compact ? ' compact' : '';
+        return `
+            <article class="filter-row ${status}${compactClass}" data-filter-id="${filter.id}">
+                <div class="stage-badge ${status}">${this.getStageNumber(filter) || 'F'}</div>
+                <div class="filter-row-main">
+                    <div class="filter-row-title">
+                        <h4>${filter.name}</h4>
+                        <span class="status-chip ${status}">${this.getShortStatusText(status, daysUntilDue)}</span>
+                    </div>
+                    <p>${filter.stage || filter.type} - ${filter.type}</p>
+                    <div class="mini-progress" aria-label="Filter lifecycle progress">
+                        <span style="width: ${progress}%"></span>
+                    </div>
+                    <small>${this.getStatusText(status, daysUntilDue)} - ${this.formatDate(filter.nextDueDate)}</small>
+                </div>
+                <span class="chevron" aria-hidden="true"></span>
+            </article>
+        `;
     }
 
     createFilterCard(filter) {
-        const status = this.getFilterStatus(filter);
-        const daysUntilDue = this.getDaysUntilDue(filter.nextDueDate);
-        
-        return `
-            <div class="filter-card ${status}" data-filter-id="${filter.id}">
-                <div class="filter-header">
-                    <div class="filter-stage">${filter.stage || 'Filter'}</div>
-                    <div class="filter-actions">
-                        <button class="action-btn replace-btn" title="Mark as Replaced">🔄</button>
-                        <button class="action-btn delete-btn" title="Delete Filter">🗑️</button>
-                    </div>
-                </div>
-                <div class="filter-content">
-                    <h3 class="filter-name">${filter.name}</h3>
-                    <p class="filter-location">📍 ${filter.location}</p>
-                    <p class="filter-type">🔧 ${filter.type}</p>
-                    <div class="filter-status">
-                        <span class="status-indicator ${status}"></span>
-                        <span class="status-text">${this.getStatusText(status, daysUntilDue)}</span>
-                    </div>
-                    <div class="filter-details">
-                        <div class="detail-item">
-                            <span class="detail-label">Due:</span>
-                            <span class="detail-value">${this.formatDate(filter.nextDueDate)}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Interval:</span>
-                            <span class="detail-value">${filter.replacementInterval} months</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Cost:</span>
-                            <span class="detail-value">${this.formatCurrency(filter.cost)}</span>
-                        </div>
-                        <div class="detail-item">
-                            <span class="detail-label">Notifications:</span>
-                            <span class="detail-value">${this.getNotificationSummary(filter)}</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        `;
+        return this.createFilterRow(filter);
+    }
+
+    getFilterProgress(filter, daysUntilDue) {
+        const lifetime = Math.max(1, Number(this.cloudSyncManager?.expectedLifetimeDays?.(filter)) || (Number(filter.replacementInterval) || 1) * 30);
+        const used = Math.max(0, lifetime - Math.max(0, daysUntilDue));
+        if (daysUntilDue < 0) return 100;
+        return Math.min(100, Math.max(4, Math.round((used / lifetime) * 100)));
+    }
+
+    getStageShortLabel(filter) {
+        const type = String(filter.type || filter.name || '').toUpperCase();
+        if (type.includes('SED')) return 'SED';
+        if (type.includes('CARBON BLOCK')) return 'CTO';
+        if (type.includes('CARBON')) return 'CARB';
+        if (type.includes('RO')) return 'RO';
+        if (type.includes('POST')) return 'POST';
+        if (type.includes('MIN')) return 'MIN';
+        if (type.includes('ALK')) return 'ALK';
+        if (type.includes('UV')) return 'UV';
+        return type.slice(0, 4) || 'FLT';
     }
 
     getNotificationSummary(filter) {
@@ -1122,12 +1298,32 @@ Note: Some browsers may require you to clear site data completely.`);
             case 'overdue':
                 return `Overdue by ${Math.abs(daysUntilDue)} days`;
             case 'due-soon':
-                return `Due in ${daysUntilDue} days`;
+                return daysUntilDue === 0 ? 'Due today' : `Due in ${daysUntilDue} days`;
             case 'good':
                 return `${daysUntilDue} days remaining`;
             default:
                 return 'Unknown';
         }
+    }
+
+    getShortStatusText(status, daysUntilDue) {
+        switch (status) {
+            case 'overdue':
+                return `${Math.abs(daysUntilDue)}d overdue`;
+            case 'due-soon':
+                return daysUntilDue === 0 ? 'Due today' : `${daysUntilDue}d left`;
+            case 'good':
+                return 'Healthy';
+            default:
+                return 'Unknown';
+        }
+    }
+
+    getStageNumber(filter) {
+        const fromStage = String(filter.stage || '').match(/\d+/);
+        if (fromStage) return Number(fromStage[0]);
+        const fromId = String(filter.id || '').match(/\d+/);
+        return fromId ? Number(fromId[0]) : 0;
     }
 
     formatDate(dateString) {
@@ -1804,7 +2000,7 @@ class CloudSyncManager {
         if (!config.supabaseUrl) missing.push('Supabase URL');
         if (!config.supabaseAnonKey) missing.push('anon key');
         if (!config.vapidPublicKey) missing.push('VAPID public key');
-        status.textContent = missing.length ? `Missing ${missing.join(', ')} in config.js` : 'Loaded from config.local.js';
+        status.textContent = missing.length ? `Missing ${missing.join(', ')} in config.js` : 'Loaded from config.js';
     }
 
     saveConfigFromUI() {
@@ -2011,6 +2207,111 @@ class CloudSyncManager {
         } catch (error) {
             this.updateStatus(`Cloud migration failed: ${error.message}`);
             throw error;
+        }
+    }
+
+    cloudFilterToLocal(row) {
+        const settings = row.notification_settings || {};
+        const intervalMonths = Number(row.replacement_interval_months) || Math.max(1, Math.round((Number(row.expected_lifetime_days) || 30) / 30.4375));
+        return {
+            id: row.legacy_local_id || `cloud-${row.id}`,
+            cloudId: row.id,
+            name: row.name,
+            location: row.location || '',
+            stage: row.stage || '',
+            type: row.filter_type || 'Other',
+            brand: row.brand || '',
+            model: row.model || '',
+            installDate: row.installed_date,
+            replacementInterval: intervalMonths,
+            nextDueDate: row.expected_replacement_date,
+            cost: Number(row.cost) || 0,
+            notes: row.notes || '',
+            isActive: row.replacement_status !== 'disabled',
+            lastReplacedDate: row.last_replaced_date || null,
+            notificationSettings: {
+                buyReminder: {
+                    enabled: settings.buyReminder?.enabled ?? row.reminders_enabled !== false,
+                    timing: Number(settings.buyReminder?.timing ?? row.purchase_reminder_lead_days ?? 14),
+                    frequency: settings.buyReminder?.frequency || 'weekly',
+                    time: settings.buyReminder?.time || '09:00',
+                    stopDays: Number(settings.buyReminder?.stopDays ?? 7)
+                },
+                replaceReminder: {
+                    enabled: settings.replaceReminder?.enabled ?? row.reminders_enabled !== false,
+                    timing: Number(settings.replaceReminder?.timing ?? 1),
+                    frequency: settings.replaceReminder?.frequency || 'daily',
+                    time: settings.replaceReminder?.time || '10:00',
+                    overdueEscalation: settings.replaceReminder?.overdueEscalation || 'every-2-hours'
+                },
+                criticalReminder: {
+                    enabled: settings.criticalReminder?.enabled ?? false,
+                    threshold: Number(settings.criticalReminder?.threshold ?? 14),
+                    frequency: settings.criticalReminder?.frequency || 'hourly'
+                }
+            }
+        };
+    }
+
+    cloudHistoryToLocal(row, filterIdByCloudId) {
+        return {
+            id: row.legacy_local_id || `cloud-history-${row.id}`,
+            filterId: filterIdByCloudId.get(row.filter_id) || null,
+            filterName: row.filter_name || 'Filter',
+            date: row.replaced_on,
+            cost: Number(row.cost) || 0,
+            notes: row.notes || '',
+            type: row.log_type || 'replacement'
+        };
+    }
+
+    async restoreCloudData() {
+        try {
+            if (!confirm('Restore cloud data onto this device? A local backup will be created first, then current local filters and history will be replaced.')) return;
+            this.updateStatus('Creating a local backup before cloud restore...');
+            await this.app.backupManager.performBackup();
+            const user = await this.ensureUser();
+            const client = await this.getClient();
+
+            this.updateStatus('Downloading filters and history from cloud...');
+            const filtersResult = await client
+                .schema('aquatracker').from('filters')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('stage', { ascending: true });
+            if (filtersResult.error) throw filtersResult.error;
+
+            const cloudFilters = filtersResult.data || [];
+            const localFilters = cloudFilters.map(row => this.cloudFilterToLocal(row));
+            const filterNameByCloudId = new Map(cloudFilters.map(row => [row.id, row.name]));
+            const filterIdByCloudId = new Map(localFilters.map(filter => [filter.cloudId, filter.id]));
+
+            const historyResult = await client
+                .schema('aquatracker').from('filter_replacement_logs')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('replaced_on', { ascending: false });
+            if (historyResult.error) throw historyResult.error;
+
+            const localHistory = (historyResult.data || []).map(row => ({
+                ...this.cloudHistoryToLocal(row, filterIdByCloudId),
+                filterName: filterNameByCloudId.get(row.filter_id) || 'Filter'
+            }));
+
+            this.app.filters = localFilters;
+            this.app.history = localHistory;
+            this.app.saveData();
+            this.app.saveHistory();
+            this.app.updateStats();
+            this.app.renderFilters();
+            if (this.app.currentTab === 'history') this.app.renderHistory();
+            if (this.app.currentTab === 'statistics') this.app.renderStatistics();
+
+            this.updateStatus(`Cloud restore complete: ${localFilters.length} filters and ${localHistory.length} history rows restored to this device.`);
+            this.app.showNiceModal('Cloud Restore Complete', `${localFilters.length} filters and ${localHistory.length} history rows were restored to this device. A local backup was created first.`);
+        } catch (error) {
+            this.updateStatus(`Cloud restore failed: ${error.message}`);
+            this.app.showNiceModal('Cloud Restore Failed', error.message);
         }
     }
 
