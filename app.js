@@ -132,6 +132,8 @@ class AquaTracker {
         this.installPromptEvent = null;
         this.currency = 'EGP';
         this.pendingDeleteId = null;
+        this.pendingConfirmCallback = null;
+        this.pendingConfirmResolve = null;
         this.themeController = new ThemeController();
         this.cloudSyncManager = new CloudSyncManager(this);
         this.pushNotificationManager = new PushNotificationManager(this);
@@ -547,7 +549,7 @@ class AquaTracker {
 
         const resetData = document.getElementById('reset-data');
         if (resetData) {
-            resetData.addEventListener('click', () => this.resetAllData());
+            resetData.addEventListener('click', () => this.confirmResetData());
         }
 
         // Backup settings
@@ -720,6 +722,10 @@ class AquaTracker {
         const confirmCancel = document.getElementById('confirm-cancel');
         if (confirmOk) confirmOk.addEventListener('click', () => this.handleConfirmOk());
         if (confirmCancel) confirmCancel.addEventListener('click', () => {
+            if (this.pendingConfirmResolve) {
+                this.pendingConfirmResolve(false);
+                this.pendingConfirmResolve = null;
+            }
             this.pendingConfirmCallback = null;
             this.closeModal('confirm-modal');
         });
@@ -777,20 +783,34 @@ class AquaTracker {
         
         if (modal && titleElement && bodyElement) {
             titleElement.textContent = title;
-            bodyElement.innerHTML = `<p>${message}</p>`;
-            modal.style.display = 'flex';
+            bodyElement.textContent = '';
+            const paragraph = document.createElement('p');
+            paragraph.textContent = message;
+            bodyElement.appendChild(paragraph);
+            this.showModal('generic-modal');
         }
     }
 
-    showConfirmModal(message, callback) {
+    showConfirmModal(message, callback, options = {}) {
         const modal = document.getElementById('confirm-modal');
         const messageElement = document.getElementById('confirm-message');
+        const titleElement = modal?.querySelector('.modal-header h2');
+        const okButton = document.getElementById('confirm-ok');
         
         if (modal && messageElement) {
+            if (titleElement) titleElement.textContent = options.title || 'Confirm Action';
+            if (okButton) okButton.textContent = options.confirmLabel || 'Confirm';
             messageElement.textContent = message;
             this.pendingConfirmCallback = callback;
+            const promise = new Promise(resolve => {
+                this.pendingConfirmResolve = resolve;
+            });
             this.showModal('confirm-modal');
+            return promise;
         }
+
+        callback?.();
+        return Promise.resolve(true);
     }
 
     // Currency Management
@@ -1361,6 +1381,11 @@ Note: Some browsers may require you to clear site data completely.`);
     closeModal(modalId) {
         const modal = document.getElementById(modalId);
         if (modal) {
+            if (modalId === 'confirm-modal' && this.pendingConfirmResolve) {
+                this.pendingConfirmResolve(false);
+                this.pendingConfirmResolve = null;
+                this.pendingConfirmCallback = null;
+            }
             modal.style.display = 'none';
             modal.classList.remove('show');
             document.body.style.overflow = '';
@@ -1388,14 +1413,20 @@ Note: Some browsers may require you to clear site data completely.`);
         const filter = this.filters.find(f => f.id === filterId);
         if (!filter) return;
 
-        document.getElementById('confirm-message').textContent = 
-            `Are you sure you want to delete "${filter.name}"? This action cannot be undone.`;
-        
         this.pendingDeleteId = filterId;
-        this.showModal('confirm-modal');
+        this.showConfirmModal(
+            `Are you sure you want to delete "${filter.name}"? This action cannot be undone.`,
+            null,
+            { title: 'Delete Filter', confirmLabel: 'Delete' }
+        );
     }
 
-    handleConfirmOk() {
+    async handleConfirmOk() {
+        const callback = this.pendingConfirmCallback;
+        const resolve = this.pendingConfirmResolve;
+        this.pendingConfirmCallback = null;
+        this.pendingConfirmResolve = null;
+
         if (this.pendingDeleteId) {
             this.filters = this.filters.filter(f => f.id !== this.pendingDeleteId);
             this.saveData();
@@ -1403,11 +1434,17 @@ Note: Some browsers may require you to clear site data completely.`);
             this.renderFilters();
             this.pendingDeleteId = null;
         }
-        if (this.pendingConfirmCallback) {
-            this.pendingConfirmCallback();
-            this.pendingConfirmCallback = null;
-        }
+
         this.closeModal('confirm-modal');
+
+        if (resolve) resolve(true);
+        if (callback) {
+            try {
+                await callback();
+            } catch (error) {
+                this.showNiceModal('Action Failed', error.message || 'The requested action could not be completed.');
+            }
+        }
     }
 
     markAsReplaced(filterId) {
@@ -2281,9 +2318,11 @@ class CloudSyncManager {
 
     async restoreCloudData() {
         try {
-            const confirmed = await new Promise(resolve => {
-                this.app.showConfirmModal('Restore cloud data onto this device? A local backup will be created first, then current local filters and history will be replaced.', () => resolve(true));
-            });
+            const confirmed = await this.app.showConfirmModal(
+                'Restore cloud data onto this device? A local backup will be created first, then current local filters and history will be replaced.',
+                null,
+                { title: 'Restore Cloud Data', confirmLabel: 'Restore' }
+            );
             if (!confirmed) return;
             this.updateStatus('Creating a local backup before cloud restore...');
             await this.app.backupManager.performBackup();

@@ -4130,3 +4130,117 @@ body[data-theme] {
     grid-template-columns: 1fr !important;
   }
 }
+
+/* Modal polish: consistent mobile gutters, safe areas, and readable spacing. */
+.modal {
+  align-items: center !important;
+  justify-content: center !important;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(16px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left)) !important;
+  overflow-y: auto;
+}
+
+.modal-content {
+  width: min(100%, 520px) !important;
+  max-width: calc(100vw - 32px) !important;
+  max-height: min(86dvh, 760px) !important;
+  margin: auto !important;
+  border-radius: 18px !important;
+  overflow: hidden auto !important;
+  background: var(--app-card) !important;
+  border: 1px solid var(--app-line) !important;
+}
+
+#generic-modal .modal-content,
+#confirm-modal .modal-content,
+#notification-modal .modal-content {
+  width: min(100%, 380px) !important;
+}
+
+.modal-header {
+  padding: 18px 18px 14px !important;
+  gap: 12px;
+}
+
+.modal-header h2 {
+  font-size: 1.02rem !important;
+  line-height: 1.25;
+}
+
+.modal-close {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  line-height: 1;
+}
+
+.modal-body {
+  padding: 18px !important;
+}
+
+#generic-modal .modal-body,
+#confirm-modal .modal-body,
+#notification-modal .modal-body {
+  text-align: center;
+}
+
+#generic-modal .modal-body p,
+#confirm-modal .modal-body p,
+#notification-modal .modal-body p {
+  margin: 0;
+  white-space: pre-line;
+}
+
+.modal-actions,
+.modal .form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  padding: 0;
+  margin-top: 18px;
+}
+
+.modal-actions .btn,
+.modal .form-actions .btn {
+  min-height: 44px;
+  border-radius: 12px;
+}
+
+#filter-modal .modal-content {
+  width: min(100%, 560px) !important;
+}
+
+@media (max-width: 520px) {
+  .modal {
+    align-items: flex-start !important;
+    padding-top: max(18px, env(safe-area-inset-top)) !important;
+  }
+
+  .modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: calc(100dvh - 36px - env(safe-area-inset-top) - env(safe-area-inset-bottom)) !important;
+    border-radius: 16px !important;
+  }
+
+  .modal-header {
+    padding: 16px 16px 12px !important;
+  }
+
+  .modal-body {
+    padding: 16px !important;
+  }
+
+  .modal-actions,
+  .modal .form-actions {
+    flex-direction: column-reverse;
+    align-items: stretch;
+  }
+
+  .modal-actions .btn,
+  .modal .form-actions .btn {
+    width: 100%;
+  }
+}
