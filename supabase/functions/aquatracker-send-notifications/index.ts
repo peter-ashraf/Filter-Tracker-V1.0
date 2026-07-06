@@ -174,12 +174,18 @@ serve(async (req) => {
     supabase.schema("aquatracker").from("profiles").select("id, timezone"),
     supabase.schema("aquatracker").from("notification_preferences").select("user_id, push_enabled, due_soon_days, overdue_cooldown_hours, purchase_cooldown_hours"),
     supabase.schema("aquatracker").from("filters").select("id, user_id, name, location, expected_replacement_date, purchase_reminder_lead_days, replacement_status, reminders_enabled, notification_settings").in("replacement_status", ["active", "purchased"]),
-    supabase.schema("aquatracker").schema("aquatracker").from("push_subscriptions").select("id, user_id, endpoint, p256dh, auth").eq("is_active", true),
+    supabase.schema("aquatracker").from("push_subscriptions").select("id, user_id, endpoint, p256dh, auth").eq("is_active", true),
   ]);
 
   if (profilesError || prefsError || filtersError || subscriptionsError) {
-    console.error({ profilesError, prefsError, filtersError, subscriptionsError });
-    return json({ error: "Failed to load notification data" }, 500);
+    const details = {
+      profiles: profilesError?.message ?? null,
+      preferences: prefsError?.message ?? null,
+      filters: filtersError?.message ?? null,
+      subscriptions: subscriptionsError?.message ?? null,
+    };
+    console.error("notification data load failed", details);
+    return json({ error: "Failed to load notification data", details }, 500);
   }
 
   const prefsByUser = new Map<string, Preferences>();
@@ -270,7 +276,7 @@ serve(async (req) => {
             const statusCode = error?.statusCode;
             results.push({ subscriptionId: sub.id, ok: false, statusCode, message: error?.message });
             if (statusCode === 404 || statusCode === 410) {
-              await supabase.schema("aquatracker").schema("aquatracker").from("push_subscriptions").update({ is_active: false }).eq("id", sub.id);
+              await supabase.schema("aquatracker").from("push_subscriptions").update({ is_active: false }).eq("id", sub.id);
             }
           }
         }
